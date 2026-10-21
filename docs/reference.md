@@ -1,120 +1,50 @@
-# ACEBOTT block reference
+# RobotShield API
 
-The ACEBOTT extension provides MakeCode blocks for educational micro:bit
-robotics, smart-home projects, sensors, actuators, and displays. All blocks
-appear in the **Acebott** toolbox category.
+所有函数位于 `Acebott` 命名空间。
 
-## Robot car and controller
+## 机械臂动作
 
-- `motors(leftSpeed, rightSpeed)` drives both motors from -100% to 100%.
-- `stopCar()` stops both motors.
-- `moveTime(direction, speed)` drives forward, backward, left, or right.
-- `tracking(side)` reads the selected line-tracking sensor.
-- `colorLight(...)` and `singleHeadlights(...)` control the car RGB lights.
-- `joystick(...)`, `fourBitKey(...)`, and `vibratingMachine(...)` support the
-  ACEBOTT micro:bit controller.
+| 函数 | 用途 |
+| --- | --- |
+| `armInitialize(chassis, shoulder, elbow, claws)` | 配置四关节输出并初始化为 90° |
+| `armSetJoint(joint, angle, speed)` | 设置一个关节的角度和速度 |
+| `armSetPose(chassis, shoulder, elbow, claws)` | 更新四关节姿态，并保留限位检查 |
+| `armSetOutput(channel, angle, speed)` | 控制 servo0～servo7 独立输出 |
+| `armSetSpeed(speed)` | 设置慢、中、快档位，作用于关节、复位和 XYZ 移动 |
+| `armClaw(state)` | 夹爪张开至 150°或闭合至 90° |
+| `armHomePose()` | 四关节回 90°，保留 XYZ 原点 |
+| `armReset()` | 四关节回 90°，完成后将该姿态设为 XYZ 原点 |
+| `armSetPosition(x, y, z)` | 按现有校准和限位执行 XYZ 移动 |
+| `armGetCoordinate(axis)` | 读取根据目标角度和校准估算的坐标 |
+| `armGetJointAngle(joint)` | 读取库接受的关节目标角度 |
+| `armMemory(mode)` | 保存、运行或删除姿态；APP 模式支持扩展录制与回放操作 |
 
-## Sensors
+关节角度和坐标来自库的状态与模型，不代表传感器实测位置。
 
-- Environmental: DHT11, BMP280, LM35, MQ-4, moisture, rain, sound, light, PIR,
-  tilt, and infrared obstacle sensors.
-- Distance and position: ultrasonic distance, trace sensors, buttons, and
-  joystick inputs.
-- Digital buses: BH1745 colour sensor and ADS7828/ADC7828 analogue converter.
+## 摇杆与控制板
 
-Read functions return the raw sensor value unless the block name states a
-physical unit. Check the relevant product tutorial for wiring and calibration.
+| 函数 | 用途 |
+| --- | --- |
+| `adc7828SetAddress(address)` | 设置摇杆 ADC 的 I²C 地址 |
+| `adc7828ReadChannel(channel)` | 读取 ADC7828 的 12 位原始值 |
+| `armSetJoystick(side, xChannel, yChannel, swChannel)` | 配置机械臂摇杆并启动后台读取 |
+| `armReadJoystick(side, value)` | 读取配置好的摇杆通道 |
+| `stcServoAngle(channel, degree)` | 控制 STC 舵机输出 |
+| `i2cAddressRead()` / `i2cAddressCheck(address)` | 串口扫描或检查 I²C 设备 |
 
-## Actuators
+兼容接口 `armBaseControl`、`chassisControl`、`shoulderControl`、`elbowControl`、`clawsControl` 以及 STC/ADC 初始化检查继续保留。
 
-- LEDs, RGB LEDs, relays, lasers, buzzers, vibration motors, and DC motors.
-- Direct PWM servos, continuous-rotation servos, and I²C servo channels.
+## APP 控制
 
-Always check the module voltage and current requirements. Motors and servos
-should be powered through the matching ACEBOTT expansion board rather than
-directly from a micro:bit GPIO pin.
+| 函数 | 用途 |
+| --- | --- |
+| `armAppPrepare()` | 将现有机械臂动作接入 APP 调度 |
+| `armAppSetJoystick(side, direction)` | 设置左右方向键；0 停止，1 上，2 下，3 左，4 右 |
+| `armAppParseAngle(text)` | 解析 0～180°角度文本，错误时返回 -1 |
+| `armAppParseCoordinates(text)` | 解析三个 XYZ 数值，错误时返回空列表 |
+| `armAppSelectGroup(group)` | 选择 1～3 记忆组 |
+| `armAppUpdate()` | 每轮推进待执行动作；放入重复执行中 |
+| `armAppStop()` | 停止待执行、回位、录制和回放，保留已保存姿态 |
+| `onArmAppResult(handler)` | 接收动作状态和结果，由主程序显示或发送 |
 
-## Displays and communication
-
-- LED matrix, TM1650 four-digit display, LCD1602, and 128×64 OLED.
-- Infrared receiver, RC522 RFID, and UART speech-recognition module.
-
-## Micro:bit robotic arm
-
-Initialize the chassis, shoulder, elbow, and claws with four STC controller
-channels (or the supported direct micro:bit servo outputs). Each joint starts at
-90 degrees. Chassis and shoulder use 0–180 degrees; claws use 90–180 degrees.
-Claw targets below 90 degrees are clamped to 90, and targets above 180 to 180.
-This applies to joint and pose control, joystick control, and the configured
-claw output used by armSetOutput. The elbow is limited to 0–120 degrees, with
-an additional shoulder/elbow safety constraint.
-
-- `armSetJoint(...)` moves one joint to an angle at a speed from 1 to 100.
-- `armReset()` moves the four configured joints to 90 degrees at the current
-  speed and makes that
-  pose XYZ=(0,0,0). Subsequent XYZ commands and coordinate reads use this
-  relative origin; `armInitialize(...)` restores the original coordinate frame.
-  Output labels are `servo0` to `servo7`; channel enum values are unchanged.
-- `armSetSpeed(...)` selects slow, medium, or fast movement. Set the speed
-  immediately before `armReset()` to select its smooth return speed.
-- `armClaw(...)` opens to 150 degrees or closes to 90 degrees.
-- `armHomePose()` returns all four joints to 90 degrees while preserving the
-  existing XYZ origin. In APP mode it uses the APP action scheduler.
-- `armMemory(...)` saves, runs, or deletes up to 20 poses in RAM. With
-  `armAppPrepare()` and repeated `armAppUpdate()`, the same block also supports
-  three memory groups, recording, loop playback, and stopping. Saved poses are
-  cleared when the micro:bit restarts.
-- `armSetPosition(x, y, z)` uses the supplied IK-v1 conversion and measured
-  corrections directly, with H=8, L1=7, L2=12 cm, ten calibration poses, yaw,
-  ground-reach and Z=2 interpolation. The existing block and three-argument API
-  are retained. The current claw angle is preserved.
-- Before reset, XYZ uses the same base coordinate frame as the serial program.
-  After `armReset()`, XYZ is relative to the modeled home pose. Reinitialize
-  the arm to restore the original frame.
-- Original-frame input checks are X=-19..19, Y=0..19, Z=0..27 cm and shoulder-to-
-  target distance=8..19 cm. Joint limits and every interpolated step are checked
-  before moving; rejected targets do not start motion. Motion follows joint
-  angle interpolation with the serial program's effective 20 ms step interval.
-- `armGetCoordinate(...)` uses recorded XYZ when the cached joint angles match a
-  measured pose; elsewhere it returns a geometric estimate using the same
-  nominal dimensions and zero offsets. It does not measure actual position or
-  exactly invert all empirical corrections. `armGetJointAngle(...)` returns
-  cached target angles.
-- For example, `(0,13,2)` retains C=90, S=32, E=87 from the serial program.
-  From the initialized 90-degree pose, `(0,10,10)` computes C=90, S=93, E=120
-  and passes the joint and path checks with the 120-degree elbow limit.
-  `(0,10,11)` computes C=90, S=97, E=118 in the model.
-- `armSetJoystick(...)` assigns 0–255 ADC7828 channels to a left or right
-  joystick and starts background control. Values below 50 and above 250 are
-  treated as movement; a switch value below 50 is pressed. The left joystick controls chassis/shoulder;
-  the right controls elbow/claws. Short-press the left switch to save a pose,
-  hold it for three seconds to delete poses, and press the right switch to run
-  the saved sequence.
-
-## Examples
-
-Stop the robot after driving forward for one second:
-
-```blocks
-Acebott.motors(50, 50)
-basic.pause(1000)
-Acebott.stopCar()
-```
-
-Read temperature and show it on the micro:bit:
-
-```blocks
-let temperature = Acebott.dht11Value(DigitalWritePin.P1, Dht11Type.Celsius)
-basic.showNumber(temperature)
-```
-
-## Further learning
-
-- [QD024 product and tutorial resources](https://acebott.com/stem-kits/explorer-series/acebott-qd024-smart-car-kit/)
-- [QE005/QE006 product and tutorial resources](https://acebott.com/stem-kits/explorer-series/acebott-qe005-micro-bit-smart-home-iot-starter-kit-with-arduino-acecode-scratch/)
-- [ACEBOTT kit documentation](https://acebott.com/docs-category/acebott-kit/)
-
-```package
-acebott=github:September535/ACEBOTT
-```
-
+APP 指令分发及 Bluetooth UART 示例见 [APP 说明](arm-app.md)。

@@ -32,6 +32,7 @@ class AcebottSTC {
 }
 
 // Mechanical-arm support extracted from AcebottAdvanced.ts and AcebottMicrobit.ts.
+//% color="#0B3D91" weight=100 icon="\uf1b9" block="RobotShield"
 namespace Acebott {
     let adc7828Init = false
     let adc7828: AcebottADC7828
@@ -342,14 +343,6 @@ namespace Acebott {
         Y = 1,
         //% block="SW"
         SW = 2
-    }
-
-    /** M1 or M2 motor on the robotic-arm controller board. */
-    export enum ArmMotor {
-        //% block="M1"
-        M1 = 1,
-        //% block="M2"
-        M2 = 2
     }
 
     const ARM_BASE_HEIGHT = 8
@@ -707,51 +700,6 @@ namespace Acebott {
                 basic.pause(20)
             }
         })
-    }
-
-    function writeArmMotor(
-        in1: DigitalPin,
-        in2: DigitalPin,
-        pwmPin: AnalogPin,
-        speed: number
-    ): void {
-        speed = Math.constrain(Math.round(speed), -255, 255)
-        let pwm = Math.round(Math.abs(speed) * 1023 / 255)
-
-        // Disable PWM before changing direction.
-        pins.analogWritePin(pwmPin, 0)
-        if (speed > 0) {
-            pins.digitalWritePin(in1, 1)
-            pins.digitalWritePin(in2, 0)
-        } else if (speed < 0) {
-            pins.digitalWritePin(in1, 0)
-            pins.digitalWritePin(in2, 1)
-        } else {
-            pins.digitalWritePin(in1, 0)
-            pins.digitalWritePin(in2, 0)
-        }
-        pins.analogWritePin(pwmPin, pwm)
-    }
-
-    /**
-     * Set the speed and direction of motor M1 or M2.
-     * Positive values rotate forward, negative values rotate backward, and 0 stops.
-     */
-    //% blockId=armMotorSpeed block="control motor %motor speed %speed -255~255"
-    //% motor.fieldEditor="gridpicker" motor.fieldOptions.columns=2
-    //% speed.min=-255 speed.max=255 speed.defl=0
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
-    //% weight=105
-    //% help=github:acebott/docs/reference
-    export function armMotorSpeed(motor: ArmMotor, speed: number): void {
-        if (motor == ArmMotor.M1) {
-            // M1: AIN1=P14, AIN2=P15, PWMA=P16
-            writeArmMotor(DigitalPin.P14, DigitalPin.P15, AnalogPin.P16, speed)
-        } else {
-            // M2: BIN1=P13, BIN2=P12, PWMB=P2
-            writeArmMotor(DigitalPin.P13, DigitalPin.P12, AnalogPin.P2, speed)
-        }
     }
 
     /** Initialize the four robotic-arm joint outputs at 90 degrees. */

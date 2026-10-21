@@ -1,7 +1,7 @@
 {
     "name": "robotshield",
     "version": "0.0.1",
-    "description": "MakeCode extension collection for BBC micro:bit and ACEBOTT hardware modules.",
+    "description": "Robotic arm and APP control for BBC micro:bit and RobotShield.",
     "license": "MIT",
     "dependencies": {
         "core": "*"
@@ -10,21 +10,11 @@
         "README.md",
         "docs/reference.md",
         "docs/testing.md",
-        "Acebott.ts",
-        "AcebottBackground.ts",
-        "AcebottLcd1602.ts",
-        "AcebottAdvanced.ts",
-        "_locales/acebott-strings.json",
-        "_locales/acebott-jsdoc-strings.json",
-        "_locales/zh-cn/acebott-strings.json",
-        "AcebottColor.ts",
-        "AcebottOled.ts",
-        "AcebottServo.ts",
-        "AcebottBMP280.ts",
         "AcebottADC7828.ts",
-        "AcebottMicrobit.ts",
         "AcebottRobotShield.ts",
-        "AcebottArmApp.ts"
+        "AcebottArmApp.ts",
+        "_locales/robotshield-strings.json",
+        "_locales/zh-cn/robotshield-strings.json"
     ],
     "testFiles": [
         "test.ts"

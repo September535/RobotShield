@@ -1,157 +1,51 @@
 # RobotShield
 
-Microsoft MakeCode extension for BBC micro:bit and ACEBOTT hardware modules.
+面向 BBC micro:bit 的机械臂与 APP 动作控制扩展。
 
-This package provides blocks for common sensors, actuators, displays, and
-ACEBOTT micro:bit car hardware.
+## 功能
 
-## Supported ACEBOTT hardware
+- 四关节控制、独立舵机输出、速度设置和夹爪开合。
+- XYZ 坐标移动、关节限位、回初始姿态和复位。
+- ADC7828 摇杆读取、配置和 I²C 诊断。
+- 姿态记忆与回放；APP 模式支持三组记忆、循环回放和手动中断。
+- APP 摇杆、角度及 XYZ 文本解析、动作更新与结果回调。
 
-This extension supports the modules and expansion boards used by these
-commercially available educational kits:
+函数命名空间沿用 `Acebott`。机械臂的限位、校准、复位和 APP 动作调度保留原有逻辑。
 
-- [QD024 TinkerBott Micro:bit Robot Car Kit](https://acebott.com/stem-kits/explorer-series/acebott-qd024-smart-car-kit/)
-- [QE005/QE006 Micro:bit Smart Home IoT Starter Kit](https://acebott.com/stem-kits/explorer-series/acebott-qe005-micro-bit-smart-home-iot-starter-kit-with-arduino-acecode-scratch/)
-- [ACEBOTT Micro:bit kit tutorials and setup guides](https://acebott.com/docs-category/acebott-kit/)
+## 安装
 
-## Installation
-
-1. Open [Microsoft MakeCode for micro:bit](https://makecode.microbit.org/).
-2. Create a new project and select **Extensions**.
-3. Paste this repository URL into the search box:
+1. 打开 [MakeCode for micro:bit](https://makecode.microbit.org/)。
+2. 新建项目，选择“扩展”，输入：
 
 ```text
 https://github.com/September535/RobotShield
 ```
 
-4. Select **robotshield** to add the extension.
+3. 添加 `robotshield`，打开 **RobotShield** 积木分类。
 
-## Quick start
+## 示例
 
-```blocks
-Acebott.motors(50, 50)
-basic.pause(1000)
-Acebott.stopCar()
-```
+- [机械臂搬运](examples/arm-transport.ts) · [说明](docs/arm-transport.md)
+- [APP 控制](examples/arm-app.ts) · [指令和接线说明](docs/arm-app.md)
+- [速度与复位](examples/arm-smooth-reset.ts)
 
-## Block API
+将一个示例完整复制到 `main.ts`。默认关节输出为 STC0、STC1、STC2、STC3，按实际接线调整。
 
-All public blocks are grouped under the `Acebott` category.
+完整 APP 示例使用 **micro:bit V2**；当前版本在 V1 上会超出程序容量。APP 示例需要另加 MakeCode 的 Bluetooth 扩展。蓝牙 UART、连接事件和指令分发由示例主程序处理；库负责机械臂动作和状态，使用时保留循环中的 `armAppUpdate()`。
 
-### micro:bit car
+## 硬件接口
 
-| API | Purpose |
+| 接口 | 用途 |
 | --- | --- |
-| `motors(leftSpeed, rightSpeed)` | Run the left and right motors from -100% to 100%. |
-| `stopCar()` | Stop both motors. |
-| `moveTime(direction, speed)` | Move in a selected direction at the requested speed. |
-| `tracking(side)` | Read the left or right line-tracking sensor. |
-| `joystick(axis)` | Read the joystick X, Y, or button value. |
-| `fourBitKey(key)` | Read one of the four directional keys. |
-| `vibratingMachine(condition)` | Turn the vibration motor on or off. |
-| `colorLight(light, color)` | Set a car RGB light to a packed RGB color. |
-| `singleHeadlights(light, red, green, blue)` | Set a car light with RGB components. |
+| STC I²C `0x37` | servo0～servo5 舵机输出 |
+| micro:bit P2、P12 | servo6、servo7 直连舵机输出 |
+| ADC7828 I²C `0x48`～`0x4B` | 摇杆 X、Y、SW 读取 |
 
-### Sensors
+`armHomePose()` 回到四关节 90°，保留 XYZ 原点；`armReset()` 回到 90°后重设 XYZ 原点。二者均使用当前动作速度。
 
-| API | Purpose |
-| --- | --- |
-| `ultrasonicDistance(echo, trig, unit)` | Measure ultrasonic distance in centimetres or inches. |
-| `dht11Value(pin, type)` | Read temperature or humidity from a DHT11 sensor. |
-| `photoresistance(pin)` | Read ambient light level. |
-| `moisture(pin)` | Read a soil-moisture sensor. |
-| `pirMotion(pin)` | Read a PIR motion sensor. |
-| `soundSensor(pin)` | Read a sound sensor. |
-| `infraredObstacle(pin)` | Read an infrared obstacle sensor. |
-| `tiltSensor(pin)` | Read a tilt sensor. |
-| `raindropSensor(pin)` | Read a raindrop sensor. |
-| `mq4Sensor(pin)` | Read an MQ-4 gas sensor. |
-| `bmp280GetTemperature()` | Read BMP280 temperature in degrees Celsius. |
-| `bmp280GetPressure()` | Read BMP280 pressure in hPa. |
-| `adc7828ReadChannel(channel)` | Read an ADS7828/ADC7828 analogue channel. |
-| `colorDetect()` | Return the detected colour and RGB readings. |
+接口详见 [API 说明](docs/reference.md)，验证方法见 [测试说明](docs/testing.md)。
 
-### Actuators
+## 许可
 
-| API | Purpose |
-| --- | --- |
-| `setLed(pin, state)` | Turn an LED on or off. |
-| `setLedBrightness(pin, value)` | Set LED brightness from 0 to 100. |
-| `setRelay(pin, state)` | Turn a relay on or off. |
-| `setLaser(pin, state)` | Turn a laser module on or off. |
-| `setRgb(redPin, greenPin, bluePin, red, green, blue)` | Control an RGB LED. |
-| `servoIic(channel, degree)` | Set an I²C servo angle. |
-| `servoIo(pin, degree)` | Set a directly connected servo angle. |
-| `servoRunDir(pin, direction, speed)` | Run a continuous-rotation servo. |
-| `servoStop(pin)` | Stop a continuous-rotation servo. |
-| `dcMotorRun(motor, speed)` | Run a DC motor. |
-
-### Displays and communication
-
-| API family | Purpose |
-| --- | --- |
-| `ledMatrixShowHex(...)` | Display a hexadecimal bitmap on the micro:bit LED matrix. |
-| `tm1650_*` | Configure and write a TM1650 four-digit display. |
-| `LCD1602_*` | Configure and write an LCD1602 display. |
-| `oledShow*`, `oledClear*` | Write to and clear a 128×64 OLED display. |
-| `irOnButton(...)`, `irReceiverInit(...)` | Receive and decode infrared remote-control data. |
-| `rfidInit()`, `rfidId()`, `rfidReadData()`, `rfidWriteToCard(...)` | Initialise, read, and write an RC522 RFID module. |
-| `speechRecognitionInit(...)`, `speechRecognitionCommand(...)` | Initialise and read the speech-recognition module. |
-
-See the complete [block and TypeScript API reference](docs/reference.md).
-
-## Hardware notes
-
-- Check the module voltage and pin assignment before connecting hardware.
-- I²C modules can share the bus only when their addresses do not conflict.
-- Some blocks are intended for specific ACEBOTT kits and may require the
-  matching expansion board.
-- The extension uses MakeCode DAL/CODAL APIs and supports micro:bit V1 and V2.
-
-### I²C addresses
-
-| Device | Address |
-| --- | --- |
-| ACEBOTT car controller | `0x18` |
-| PCA9685 servo/motor controller | `0x40` |
-| LCD1602 backpack | `0x27` |
-| OLED display | `0x3C` |
-| BH1745 colour sensor | `0x38` |
-| BMP280 | `0x76` or `0x77` |
-| ADS7828/ADC7828 | `0x48` to `0x4B` |
-| RC522 RFID module | `0x28` |
-
-## Development and validation
-
-The package targets MakeCode for micro:bit. Before publishing a release:
-
-1. Run `pxt install`.
-2. Run `pxt deploy` and confirm that `test.ts` compiles.
-3. Import the package into a clean MakeCode project and verify Blocks and
-   JavaScript views.
-4. Create a semantic-version release such as `v0.0.1`.
-
-The documented simulator, compile, and hardware checks are in the
-[test plan](docs/testing.md).
-
-## License
-
-MIT. See [LICENSE.txt](LICENSE.txt).
-
-for PXT/microbit
-
-## Robotic arm teaching examples
-
-Copy one example into a separate MakeCode project using this extension.
-
-- [Transport with variables and a loop](examples/arm-transport.ts)
-- [APP control](examples/arm-app.ts) — also add the Bluetooth extension;
-  [Chinese integration guide](docs/arm-app.md)
-- [Radio controller sender](examples/arm-radio-sender.ts) and
-  [robotic arm receiver](examples/arm-radio-receiver.ts) — use two micro:bits
-  with radio group 23
-- [Smooth reset test](examples/arm-smooth-reset.ts) — press A to set a pose,
-  then B to set slow speed and return all four joints to 90 degrees
-
-Reset speed uses the existing `armSetSpeed(...)` block. `armReset()` also
-sets the reset pose as the new XYZ origin; `armHomePose()` preserves the origin.
+基于 [September535/ACEBOTT](https://github.com/September535/ACEBOTT) 的机械臂和 APP 控制源码整理。
+MIT，保留原 [LICENSE.txt](LICENSE.txt)。

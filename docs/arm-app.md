@@ -10,7 +10,9 @@
 
 ## 如何运行
 
-在 MakeCode 新建 micro:bit 项目，添加 `github:September535/ACEBOTT#main` 和现成的 Bluetooth 扩展。把 [APP 学生程序](../examples/arm-app.ts) 完整复制到 main.ts。库的 APP 文件和中英文翻译已经注册，不需要另外复制库代码。
+完整 APP 示例需要 micro:bit V2；加入 Bluetooth 后，当前 V1 程序容量不足。
+
+在 MakeCode 新建 micro:bit 项目，添加 `github:September535/RobotShield#main` 和现成的 Bluetooth 扩展。把 [APP 学生程序](../examples/arm-app.ts) 完整复制到 main.ts。库的 APP 文件和中英文翻译已经注册，不需要另外复制库代码。
 
 默认四个输出通道为 STC0、STC1、STC2、STC3；实机通道不同时，在初始化中使用现有正确配置。
 
@@ -54,12 +56,8 @@ XYZ 动作有插值过程，封装会保留最新的待执行坐标。新的手�
 
 初始 XYZ 速度设为“中”；在学生初始化程序中可改为慢或快。摇杆仍按每轮 2°、20 毫秒更新，滑块每 120 毫秒应用最新目标。
 
-## 本地验证
+## 验证
 
-已使用本地 MakeCode 8.0.21 编译器对完整机械臂库联合编译，学生程序可转成积木且没有灰色代码块。机械臂封装也单独通过了不包含 Bluetooth 包的编译。
-
-检查覆盖摇杆、滑块、XYZ 文本格式、超限拒绝、三组记忆、循环回放、手动中断、断线中断 XYZ、最新坐标取代旧坐标、模式回执和复位。新增积木及枚举选项的中文翻译已核对。
-
-APP 学生程序已通过积木转换和本地行为检查。尚未连接实际手机 APP 和机械臂验证。
+按 [测试说明](testing.md) 检查机械臂库和带 Bluetooth 扩展的 APP 示例。手机连接和机械臂动作需要实机验证。
 
 原有机械臂复位积木仍调用 `armReset()`，无需新增参数。在复位前调用 `armSetSpeed(ArmSpeed.Slow / Medium / Fast)`，复位会采用当前设置的速度。四关节分步回到 90°，完成后仍把复位姿态设为 XYZ 原点。单独设置关节角度也会更新当前速度，因此需要指定复位档位时，将设置速度放在复位之前。
