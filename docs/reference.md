@@ -6,10 +6,9 @@
 
 | 函数 | 用途 |
 | --- | --- |
-| `armInitialize(chassis, shoulder, elbow, claws)` | 配置四关节输出并初始化为 90° |
+| `armInitialize(chassis, shoulder, elbow, claws)` | 仅配置四关节输出通道，不自动设置角度或重置坐标原点 |
 | `armSetJoint(joint, angle, speed)` | 设置一个关节的角度和速度 |
 | `armSetPose(chassis, shoulder, elbow, claws)` | 更新四关节姿态，并保留限位检查 |
-| `armSetOutput(channel, angle, speed)` | 控制 servo0～servo7 独立输出 |
 | `armSetSpeed(speed)` | 设置慢、中、快档位，作用于关节、复位和 XYZ 移动 |
 | `armClaw(state)` | 夹爪张开至 150°或闭合至 90° |
 | `armHomePose()` | 四关节回 90°，保留 XYZ 原点 |
@@ -18,6 +17,8 @@
 | `armGetCoordinate(axis)` | 读取根据目标角度和校准估算的坐标 |
 | `armGetJointAngle(joint)` | 读取库接受的关节目标角度 |
 | `armMemory(mode)` | 保存、运行或删除姿态；APP 模式支持扩展录制与回放操作 |
+
+初始化不会读取或改变舵机实际位置。需要设置初始姿态时，由主程序显式调用关节、姿态、回位或复位积木。
 
 关节角度和坐标来自库的状态与模型，不代表传感器实测位置。
 
@@ -39,12 +40,15 @@
 | 函数 | 用途 |
 | --- | --- |
 | `armAppPrepare()` | 将现有机械臂动作接入 APP 调度 |
-| `armAppSetJoystick(side, direction)` | 设置左右方向键；0 停止，1 上，2 下，3 左，4 右 |
+| `armAppReceive(data)` | 接收含 `#` 的字符串片段，缓存半条并解析 11～17 指令 |
+| `armAppIsPressed(side, button)` | 判断左右 pad 上／下／左／右是否按下，只查询状态，不驱动机械臂 |
 | `armAppParseAngle(text)` | 解析 0～180°角度文本，错误时返回 -1 |
 | `armAppParseCoordinates(text)` | 解析三个 XYZ 数值，错误时返回空列表 |
 | `armAppSelectGroup(group)` | 选择 1～3 记忆组 |
 | `armAppUpdate()` | 每轮推进待执行动作；放入重复执行中 |
-| `armAppStop()` | 停止待执行、回位、录制和回放，保留已保存姿态 |
+| `armAppStop()` | 停止待执行、回位、录制和回放，清除按键及接收缓存，保留已保存姿态 |
 | `onArmAppResult(handler)` | 接收动作状态和结果，由主程序显示或发送 |
 
-APP 指令分发及 Bluetooth UART 示例见 [APP 说明](arm-app.md)。
+`ArmAppSide` 选择 `Left`／`Right`，`ArmAppButton` 选择 `Up`／`Down`／`Left`／`Right`。先调用 `armAppPrepare()`，再传入接收数据。单侧收到 `1100#`／`1200#` 后，该侧全部按键判断为假；同一侧同时只保持一个方向，左右两侧独立。按键状态不会因为主程序调用关节动作而被清除。
+
+内部指令解析及 Bluetooth UART 示例见 [APP 说明](arm-app.md)。

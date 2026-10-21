@@ -1,11 +1,21 @@
-// 机械臂动作与记忆封装。蓝牙通信和指令分发留在学生主程序。
+// APP 字符串接收、指令解析、机械臂动作与记忆封装；蓝牙通信由主程序提供。
 // XYZ 调用当前机械臂库；回位不更改 XYZ 原点。
 namespace Acebott {
     export enum ArmAppSide {
-        //% block="left directional pad"
+        //% block="left"
         Left = 0,
-        //% block="right directional pad"
+        //% block="right"
         Right = 1
+    }
+    export enum ArmAppButton {
+        //% block="up"
+        Up = 1,
+        //% block="down"
+        Down = 2,
+        //% block="left"
+        Left = 3,
+        //% block="right"
+        Right = 4
     }
     let appMessageHandler: (message: string) => void = null
 
@@ -14,13 +24,16 @@ namespace Acebott {
     let appSliderTargets = [90, 90, 90, 90]
     let appSliderPending = [false, false, false, false]
     let appSliderSpeeds = [100, 100, 100, 100]
-    let appLeft = 0
-    let appRight = 0
+    let appLeftButton = 0
+    let appRightButton = 0
+    let appReceiveBuffer = ""
+    let appDiscardFrame = false
+    let appCommands: string[] = []
+    let appDispatching = false
     let appLastTick = -20
     let appLastSlider = 0
     let appLastLimit = -500
     let appOrder = [0, 2, 1, 3]
-    let appNextAngles = [90, 90, 90, 90]
     let appPoseAngles = [90, 90, 90, 90]
     let appXYZPending = false
     let appXYZExecuting = false
@@ -55,8 +68,6 @@ namespace Acebott {
     }
 
     function appClearManual(): void {
-        appLeft = 0
-        appRight = 0
         for (let joint = 0; joint < 4; joint++) {
             appSliderPending[joint] = false
         }
@@ -180,37 +191,12 @@ namespace Acebott {
             }
             appLastSlider = control.millis()
         }
-        for (let joint = 0; joint < 4; joint++) {
-            appNextAngles[joint] = appAngles[joint]
-        }
-        if (appLeft == 1) {
-            appNextAngles[1] -= 2
-        } else if (appLeft == 2) {
-            appNextAngles[1] += 2
-        } else if (appLeft == 3) {
-            appNextAngles[0] += 2
-        } else if (appLeft == 4) {
-            appNextAngles[0] -= 2
-        }
-        if (appRight == 1) {
-            appNextAngles[2] += 2
-        } else if (appRight == 2) {
-            appNextAngles[2] -= 2
-        } else if (appRight == 3) {
-            appNextAngles[3] += 2
-        } else if (appRight == 4) {
-            appNextAngles[3] -= 2
-        }
-        for (let index = 0; index < 4; index++) {
-            let joint = appOrder[index]
-            appSetJoint(joint, appNextAngles[joint])
-        }
     }
 
     /** Convert APP text to three numbers; actual movement uses armSetPosition. */
     //% blockId=acebott_arm_app_parse_xyz block="convert APP XYZ text %coordinates to a number list"
     //% coordinates.defl="7 13 2"
-    //% subcategory="RobotShield" weight=80
+    //% subcategory="RobotShield" group="APP control" weight=80
     export function armAppParseCoordinates(coordinates: string): number[] {
         let normalized = ""
         for (let index = 0; index < coordinates.length; index++) {
@@ -389,7 +375,7 @@ namespace Acebott {
     /** 机械臂产生结果时触发；由主程序决定显示、打印或发送方式。 */
     //% blockId=acebott_arm_app_result block="when robotic arm reports a result"
     //% draggableParameters="reporter"
-    //% subcategory="RobotShield" weight=84
+    //% subcategory="RobotShield" group="APP control" weight=84
     export function onArmAppResult(handler: (message: string) => void): void {
         appMessageHandler = handler
     }
@@ -397,7 +383,7 @@ namespace Acebott {
     /** Invalid angle text returns -1 and reports an error. */
     //% blockId=acebott_arm_app_parse_angle block="convert APP angle text %angleText to a number"
     //% angleText.defl="90"
-    //% subcategory="RobotShield" weight=81
+    //% subcategory="RobotShield" group="APP control" weight=81
     export function armAppParseAngle(angleText: string): number {
         if (!appNumberValid(angleText, true)) {
             appStatus("UNKNOWN COMMAND")
@@ -419,11 +405,6 @@ namespace Acebott {
         appReadAngles()
         appManualPriority()
         appResetting = false
-        if (joint < 2) {
-            appLeft = 0
-        } else {
-            appRight = 0
-        }
         appSliderTargets[joint] = Math.constrain(Math.round(value), joint == 3 ? 90 : 0, joint == 2 ? 120 : 180)
         appSliderSpeeds[joint] = speed
         appSliderPending[joint] = true
@@ -431,7 +412,7 @@ namespace Acebott {
 
     /** 设置机械臂动作状态；先使用初始化机械臂积木设置输出通道。 */
     //% blockId=acebott_arm_app_prepare block="prepare APP arm control"
-    //% subcategory="RobotShield" weight=83
+    //% subcategory="RobotShield" group="APP control" weight=83
     export function armAppPrepare(): void {
         if (!appStarted) {
             appStarted = true
@@ -447,34 +428,120 @@ namespace Acebott {
         }
     }
 
-    /** 方向 0=停止，1=上，2=下，3=左，4=右，保持原 APP 对应的关节方向。 */
-    //% blockId=acebott_arm_app_joystick block="set APP %side direction %direction"
+    /** 查询最后收到的方向键状态；仅判断按键，不自动控制机械臂。 */
+    //% blockId=acebott_arm_app_is_pressed block="APP %side pad button %button is pressed"
     //% side.defl=Acebott.ArmAppSide.Left
-    //% direction.min=0 direction.max=4 direction.defl=0
-    //% subcategory="RobotShield" weight=82
-    export function armAppSetJoystick(side: ArmAppSide, direction: number): void {
-        if (!appStarted) {
-            return
-        }
-        if ((side != ArmAppSide.Left && side != ArmAppSide.Right) || !(direction >= 0 && direction <= 4) || direction != Math.round(direction)) {
-            appStatus("UNKNOWN COMMAND")
-            return
-        }
-        if (direction != 0) {
-            appManualPriority()
-            appResetting = false
+    //% button.defl=Acebott.ArmAppButton.Up
+    //% subcategory="RobotShield" group="APP control" weight=82
+    export function armAppIsPressed(side: ArmAppSide, button: ArmAppButton): boolean {
+        if (button < ArmAppButton.Up || button > ArmAppButton.Right || button != Math.round(button)) {
+            return false
         }
         if (side == ArmAppSide.Left) {
-            appLeft = direction
+            return appLeftButton == button
+        }
+        if (side == ArmAppSide.Right) {
+            return appRightButton == button
+        }
+        return false
+    }
+
+    function appHandleCommand(command: string): void {
+        let commandType = command.substr(0, 2)
+        let prefix = command.substr(0, 4)
+        if (command.length == 0) {
+            // 空指令不会入队；这里表示一条已丢弃的超长帧。
+            appStatus("APP FRAME TOO LONG")
+        } else if ((commandType == "11" || commandType == "12") && command.length == 4 && command.charAt(2) == "0" && command.charCodeAt(3) >= 48 && command.charCodeAt(3) <= 52) {
+            let button = parseInt(command.charAt(3))
+            if (commandType == "11") {
+                appLeftButton = button
+            } else {
+                appRightButton = button
+            }
+        } else if (commandType == "13" && (prefix == "1301" || prefix == "1302" || prefix == "1303" || prefix == "1304")) {
+            let angle = armAppParseAngle(command.substr(4))
+            if (angle >= 0) {
+                // 指令 01～04 分别对应夹爪、肘部、肩部、底盘。
+                let joint = 4 - parseInt(command.charAt(3))
+                Acebott.armSetJoint(joint, angle, 100)
+            }
+        } else if (prefix == "1401") {
+            let coordinates = armAppParseCoordinates(command.substr(4))
+            if (coordinates.length == 3) {
+                Acebott.armSetPosition(coordinates[0], coordinates[1], coordinates[2])
+            }
+        } else if (command == "1501") {
+            Acebott.armHomePose()
+        } else if (command == "1601") {
+            Acebott.armMemory(ArmMemoryMode.StartRecording)
+        } else if (command == "1602") {
+            Acebott.armMemory(ArmMemoryMode.Save)
+        } else if (command == "1603") {
+            Acebott.armMemory(ArmMemoryMode.EndRecording)
+        } else if (command == "1604") {
+            Acebott.armMemory(ArmMemoryMode.Run)
+        } else if (command == "1605") {
+            Acebott.armMemory(ArmMemoryMode.Delete)
+        } else if (command == "1606") {
+            Acebott.armMemory(ArmMemoryMode.RunLoop)
+        } else if (command == "1607") {
+            Acebott.armMemory(ArmMemoryMode.Stop)
+        } else if (commandType == "17") {
+            if (command == "1701" || command == "1702" || command == "1703") {
+                armAppSelectGroup(parseInt(command.charAt(3)))
+                appStatus(command + "1")
+            } else {
+                appStatus(command + "0")
+            }
         } else {
-            appRight = direction
+            appStatus("UNKNOWN COMMAND")
+        }
+    }
+
+    /** 传入保留 # 的蓝牙字符串片段；完整指令依次处理，末尾半条留待下次。 */
+    //% blockId=acebott_arm_app_receive block="receive and parse APP data %data"
+    //% data.defl="1101#"
+    //% subcategory="RobotShield" group="APP control" weight=85
+    export function armAppReceive(data: string): void {
+        if (!appStarted) {
+            appStatus("APP NOT PREPARED")
+            return
+        }
+        for (let index = 0; index < data.length; index++) {
+            let character = data.charAt(index)
+            if (character == "#") {
+                if (appDiscardFrame || appReceiveBuffer.length > 0) {
+                    appCommands.push(appReceiveBuffer)
+                }
+                appReceiveBuffer = ""
+                appDiscardFrame = false
+            } else if (!appDiscardFrame) {
+                let code = data.charCodeAt(index)
+                if (appReceiveBuffer.length == 0 && (code == 9 || code == 10 || code == 13 || code == 32)) {
+                    // 容许指令之间有换行；XYZ 数据内部的分隔符原样保留。
+                } else if (appReceiveBuffer.length >= 96) {
+                    appReceiveBuffer = ""
+                    appDiscardFrame = true
+                } else {
+                    appReceiveBuffer += character
+                }
+            }
+        }
+        // 先收完本次数据，再调用可能等待的结果回调，保持多条指令的先后顺序。
+        if (!appDispatching) {
+            appDispatching = true
+            while (appCommands.length > 0) {
+                appHandleCommand(appCommands.shift())
+            }
+            appDispatching = false
         }
     }
 
     /** 选择 1、2、3 记忆组，保留其他组数据，停止当前回放和记录。 */
     //% blockId=acebott_arm_app_group block="select APP arm memory group %group"
     //% group.min=1 group.max=3 group.defl=1
-    //% subcategory="RobotShield" weight=77
+    //% subcategory="RobotShield" group="APP control" weight=77
     export function armAppSelectGroup(group: number): void {
         if (appStarted && group >= 1 && group <= 3 && group == Math.round(group)) {
             appCancelXYZ()
@@ -486,18 +553,23 @@ namespace Acebott {
 
     /** 清除待执行的手动输入，停止回放、记录及回位；不清除已保存姿态。 */
     //% blockId=acebott_arm_app_stop block="stop APP arm actions"
-    //% subcategory="RobotShield" weight=76
+    //% subcategory="RobotShield" group="APP control" weight=76
     export function armAppStop(): void {
         appCancelXYZ()
         appClearManual()
         appStopPlayback()
         appRecording = false
         appResetting = false
+        appLeftButton = 0
+        appRightButton = 0
+        appReceiveBuffer = ""
+        appDiscardFrame = false
+        appCommands = []
     }
 
-    /** 放在重复执行中，每轮推进摇杆、滑块、复位或回放。 */
+    /** 放在重复执行中，每轮推进滑块、坐标、复位或回放；方向键动作由主程序定义。 */
     //% blockId=acebott_arm_app_update block="update APP arm actions"
-    //% subcategory="RobotShield" weight=75
+    //% subcategory="RobotShield" group="APP control" weight=75
     export function armAppUpdate(): void {
         if (!appStarted || appXYZExecuting || control.millis() - appLastTick < 20) {
             return

@@ -33,6 +33,7 @@ class AcebottSTC {
 
 // Mechanical-arm support extracted from AcebottAdvanced.ts and AcebottMicrobit.ts.
 //% color="#0B3D91" weight=100 icon="\uf1b9" block="RobotShield"
+//% groups='["Arm actions", "APP control", "Joystick", "Diagnostics"]'
 namespace Acebott {
     let adc7828Init = false
     let adc7828: AcebottADC7828
@@ -67,7 +68,7 @@ namespace Acebott {
      */
 
     //% blockId=adc7828ReadChannel block="ADC7828 read channel %channel"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Joystick"
     //% help=github:acebott/docs/reference
     export function adc7828ReadChannel(channel: Adc7828Channel): number {
         initADC7828()
@@ -78,7 +79,7 @@ namespace Acebott {
      */
 
     //% blockId=adc7828SetAddress block="ADC7828 set address %addr"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Joystick"
     //% help=github:acebott/docs/reference
     export function adc7828SetAddress(addr: Adc7828I2cAddress): void {
         initADC7828()
@@ -137,7 +138,7 @@ namespace Acebott {
      * Scan all standard usable 7-bit I2C addresses and print responding addresses to serial.
      */
     //% blockId=i2cAddressRead block="I2C address read"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Diagnostics"
     //% weight=100
     //% help=github:acebott/docs/reference
     export function i2cAddressRead(): void {
@@ -162,7 +163,7 @@ namespace Acebott {
     /** Check whether a manually entered hexadecimal 7-bit IIC address acknowledges. */
     //% blockId=i2cAddressCheck block="check IIC address %address"
     //% address.defl="0x37"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Diagnostics"
     //% weight=95
     //% help=github:acebott/docs/reference
     export function i2cAddressCheck(address: string): boolean {
@@ -175,7 +176,7 @@ namespace Acebott {
      */
     //% blockId=stcI2cCheck block="check STC I2C 0x37"
     //% blockHidden=true
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Diagnostics"
     //% help=github:acebott/docs/reference
     export function stcI2cCheck(): boolean {
         return acebottI2cProbe(0x37)
@@ -188,7 +189,7 @@ namespace Acebott {
     //% blockId=adc7828I2cCheck block="check ADC7828 I2C address %addr"
     //% blockHidden=true
     //% addr.defl=Adc7828I2cAddress.Address0x48
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Diagnostics"
     //% help=github:acebott/docs/reference
     export function adc7828I2cCheck(addr: Adc7828I2cAddress): boolean {
         return acebottI2cProbe(addr)
@@ -201,7 +202,7 @@ namespace Acebott {
     //% blockId=i2cInitCheck block="I2C initialization check|ADC address %addr"
     //% blockHidden=true
     //% addr.defl=Adc7828I2cAddress.Address0x48
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Diagnostics"
     //% help=github:acebott/docs/reference
     export function i2cInitCheck(addr: Adc7828I2cAddress): boolean {
         return stcI2cCheck() && adc7828I2cCheck(addr)
@@ -224,7 +225,7 @@ namespace Acebott {
     //% blockId=stcServoAngle block="microbit robotic arm|channel %channel|angle %degree"
     //% channel.min=0 channel.max=5 channel.defl=0
     //% degree.min=0 degree.max=180 degree.defl=90
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% help=github:acebott/docs/reference
     export function stcServoAngle(channel: number, degree: number): void {
         initSTC()
@@ -694,14 +695,14 @@ namespace Acebott {
         })
     }
 
-    /** Initialize the four robotic-arm joint outputs at 90 degrees. */
+    /** Configure joint output channels without moving servos or resetting the pose. */
     //% blockId=armInitialize block="robotic arm initialize chassis %chassis shoulder %shoulder elbow %elbow claws %claws"
     //% inlineInputMode=inline
     //% chassis.defl=ArmOutputChannel.STC0
     //% shoulder.defl=ArmOutputChannel.STC1
     //% elbow.defl=ArmOutputChannel.STC2
     //% claws.defl=ArmOutputChannel.STC3
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=100
     //% help=github:acebott/docs/reference
     export function armInitialize(
@@ -714,18 +715,13 @@ namespace Acebott {
         armJointOutputs[ArmJoint.Shoulder] = shoulder
         armJointOutputs[ArmJoint.Elbow] = elbow
         armJointOutputs[ArmJoint.Claws] = claws
-        armJointAngles = [90, 90, 90, 90]
-        armCoordinateOrigin = [0, 0, 0]
-        for (let joint = 0; joint < 4; joint++) {
-            writeArmJoint(joint, 90)
-        }
     }
 
     /** Set one robotic-arm joint angle and movement speed. */
     //% blockId=armSetJoint block="set robotic arm %joint|angle %angle|speed %speed"
     //% angle.min=0 angle.max=180 angle.defl=90
     //% speed.min=1 speed.max=100 speed.defl=50
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=95
     //% help=github:acebott/docs/reference
     export function armSetJoint(joint: ArmJoint, angle: number, speed: number): void {
@@ -755,7 +751,7 @@ namespace Acebott {
     //% elbow.min=0 elbow.max=120 elbow.defl=90
     //% claws.min=90 claws.max=180 claws.defl=90
     //% inlineInputMode=inline
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=94
     //% help=github:acebott/docs/reference
     export function armSetPose(
@@ -770,7 +766,7 @@ namespace Acebott {
     /** Select one speed preset for both joint and XYZ moves. */
     //% blockId=armSetSpeed block="set robotic arm speed %speed"
     //% speed.defl=ArmSpeed.Slow
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=91
     //% help=github:acebott/docs/reference
     export function armSetSpeed(speed: ArmSpeed): void {
@@ -789,7 +785,7 @@ namespace Acebott {
     /** Open to 150 degrees or close to 90 degrees, keeping the other joints still. */
     //% blockId=armClaw block="robotic arm claw %state"
     //% state.defl=ArmClawState.Open
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function armClaw(state: ArmClawState): void {
@@ -805,7 +801,7 @@ namespace Acebott {
 
     /** Return all four joints to 90 degrees without changing the XYZ origin. */
     //% blockId=armHomePose block="robotic arm return to home pose"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=89
     //% help=github:acebott/docs/reference
     export function armHomePose(): void {
@@ -818,7 +814,7 @@ namespace Acebott {
 
     /** Smoothly reset the four joints to 90 degrees and use that pose as XYZ (0,0,0). */
     //% blockId=armReset block="robotic arm reset"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=93
     //% help=github:acebott/docs/reference
     export function armReset(): void {
@@ -838,53 +834,9 @@ namespace Acebott {
         }
     }
 
-    /**
-     * Set servo0-servo7 output angle and movement speed.
-     * servo0-servo5 use STC; servo6 and servo7 use micro:bit P2 and P12.
-     */
-    //% blockId=armSetOutput block="set %channel servo angle %angle speed %speed"
-    //% channel.defl=ArmOutputChannel.STC0
-    //% angle.min=0 angle.max=180 angle.defl=90
-    //% speed.min=1 speed.max=100 speed.defl=50
-    //% subcategory="RobotShield"
-    //% weight=92
-    //% help=github:acebott/docs/reference
-    export function armSetOutput(
-        channel: ArmOutputChannel,
-        angle: number,
-        speed: number
-    ): void {
-        let outputIndex = channel
-        if (outputIndex < 0 || outputIndex > 7) {
-            return
-        }
-
-        angle = constrainArmOutputAngle(channel, angle)
-        speed = Math.constrain(Math.round(speed), 1, 100)
-        let currentAngle = armOutputAngles[outputIndex]
-
-        if (speed == 100 || currentAngle == angle) {
-            writeArmOutput(channel, angle)
-            armOutputAngles[outputIndex] = angle
-            armOutputLastAngles[outputIndex] = angle
-            return
-        }
-
-        let direction = angle > currentAngle ? 1 : -1
-        let delayMs = armStepDelay(speed)
-        while (currentAngle != angle) {
-            currentAngle += direction
-            writeArmOutput(channel, currentAngle)
-            basic.pause(delayMs)
-        }
-
-        armOutputAngles[outputIndex] = angle
-        armOutputLastAngles[outputIndex] = angle
-    }
-
     /** Save, run, or delete recorded robotic-arm poses. */
     //% blockId=armMemory block="robotic arm memory %mode"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function armMemory(mode: ArmMemoryMode): void {
@@ -1220,7 +1172,7 @@ namespace Acebott {
     //% x.defl=0
     //% y.defl=0
     //% z.defl=0
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=85
     //% help=github:acebott/docs/reference
     export function armSetPosition(x: number, y: number, z: number): void {
@@ -1304,7 +1256,7 @@ namespace Acebott {
 
     /** Get modeled XYZ in centimeters; armReset makes the home pose the origin. */
     //% blockId=armGetCoordinate block="get robotic arm coordinate %axis"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=80
     //% help=github:acebott/docs/reference
     export function armGetCoordinate(axis: ArmCoordinateAxis): number {
@@ -1314,7 +1266,7 @@ namespace Acebott {
 
     /** Get the current angle of one robotic-arm joint. */
     //% blockId=armGetJointAngle block="get robotic arm %joint angle"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=75
     //% help=github:acebott/docs/reference
     export function armGetJointAngle(joint: ArmJoint): number {
@@ -1327,7 +1279,7 @@ namespace Acebott {
     //% xChannel.defl=Adc7828Channel.CH0
     //% yChannel.defl=Adc7828Channel.CH1
     //% swChannel.defl=Adc7828Channel.CH4
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Joystick"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function armSetJoystick(
@@ -1348,7 +1300,7 @@ namespace Acebott {
 
     /** Read the raw X, Y, or SW value from a configured joystick (0-255). */
     //% blockId=armReadJoystick block="read %side joystick %value value"
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Joystick"
     //% weight=85
     //% help=github:acebott/docs/reference
     export function armReadJoystick(
@@ -1446,7 +1398,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH0
     //% outputChannel.defl=ArmOutputChannel.STC0
     //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function armBaseControl(
@@ -1465,7 +1417,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH0
     //% outputChannel.defl=ArmOutputChannel.STC0
     //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=100
     //% help=github:acebott/docs/reference
     export function chassisControl(
@@ -1484,7 +1436,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH1
     //% outputChannel.defl=ArmOutputChannel.STC1
     //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=95
     //% help=github:acebott/docs/reference
     export function shoulderControl(
@@ -1503,7 +1455,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH2
     //% outputChannel.defl=ArmOutputChannel.STC2
     //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function elbowControl(
@@ -1522,7 +1474,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH3
     //% outputChannel.defl=ArmOutputChannel.STC3
     //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield"
+    //% subcategory="RobotShield" group="Arm actions"
     //% weight=85
     //% help=github:acebott/docs/reference
     export function clawsControl(

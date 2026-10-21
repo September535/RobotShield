@@ -4,11 +4,11 @@
 
 ## 功能
 
-- 四关节控制、独立舵机输出、速度设置和夹爪开合。
+- 四关节控制、速度设置和夹爪开合。
 - XYZ 坐标移动、关节限位、回初始姿态和复位。
 - ADC7828 摇杆读取、配置和 I²C 诊断。
 - 姿态记忆与回放；APP 模式支持三组记忆、循环回放和手动中断。
-- APP 摇杆、角度及 XYZ 文本解析、动作更新与结果回调。
+- APP 字符串分段接收、指令解析、pad 按键判断、动作更新与结果回调。
 
 函数命名空间沿用 `Acebott`。机械臂的限位、校准、复位和 APP 动作调度保留原有逻辑。
 
@@ -29,9 +29,9 @@ https://github.com/September535/RobotShield
 - [APP 控制](examples/arm-app.ts) · [指令和接线说明](docs/arm-app.md)
 - [速度与复位](examples/arm-smooth-reset.ts)
 
-将一个示例完整复制到 `main.ts`。默认关节输出为 STC0、STC1、STC2、STC3，按实际接线调整。
+将一个示例完整复制到 `main.ts`。默认关节输出为 STC0、STC1、STC2、STC3，按实际接线调整。`armInitialize()` 仅配置输出通道，不自动转到 90°；初始姿态由后续动作积木明确设置。
 
-完整 APP 示例使用 **micro:bit V2**；当前版本在 V1 上会超出程序容量。APP 示例需要另加 MakeCode 的 Bluetooth 扩展。蓝牙 UART、连接事件和指令分发由示例主程序处理；库负责机械臂动作和状态，使用时保留循环中的 `armAppUpdate()`。
+完整 APP 示例使用 **micro:bit V2**；当前版本在 V1 上会超出程序容量。APP 示例需要另加 MakeCode 的 Bluetooth 扩展。蓝牙 UART 和连接事件由主程序处理；将带 `#` 的收到文本传给 `armAppReceive(data)`，库内部缓存半条数据并依次解析完整指令。左右 pad 只更新按键状态，用 `armAppIsPressed(side, button)` 判断并自行编写动作；使用时保留循环中的 `armAppUpdate()`。
 
 ## 硬件接口
 
