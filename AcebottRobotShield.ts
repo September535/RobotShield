@@ -67,8 +67,7 @@ namespace Acebott {
      */
 
     //% blockId=adc7828ReadChannel block="ADC7828 read channel %channel"
-    //% subcategory="Sensor"
-    //% group="ADC7828 Sensor"
+    //% subcategory="RobotShield"
     //% help=github:acebott/docs/reference
     export function adc7828ReadChannel(channel: Adc7828Channel): number {
         initADC7828()
@@ -79,8 +78,7 @@ namespace Acebott {
      */
 
     //% blockId=adc7828SetAddress block="ADC7828 set address %addr"
-    //% subcategory="Sensor"
-    //% group="ADC7828 Sensor"
+    //% subcategory="RobotShield"
     //% help=github:acebott/docs/reference
     export function adc7828SetAddress(addr: Adc7828I2cAddress): void {
         initADC7828()
@@ -139,8 +137,7 @@ namespace Acebott {
      * Scan all standard usable 7-bit I2C addresses and print responding addresses to serial.
      */
     //% blockId=i2cAddressRead block="I2C address read"
-    //% subcategory="Display"
-    //% group="I2C Tools"
+    //% subcategory="RobotShield"
     //% weight=100
     //% help=github:acebott/docs/reference
     export function i2cAddressRead(): void {
@@ -165,8 +162,7 @@ namespace Acebott {
     /** Check whether a manually entered hexadecimal 7-bit IIC address acknowledges. */
     //% blockId=i2cAddressCheck block="check IIC address %address"
     //% address.defl="0x37"
-    //% subcategory="Display"
-    //% group="I2C Tools"
+    //% subcategory="RobotShield"
     //% weight=95
     //% help=github:acebott/docs/reference
     export function i2cAddressCheck(address: string): boolean {
@@ -179,8 +175,7 @@ namespace Acebott {
      */
     //% blockId=stcI2cCheck block="check STC I2C 0x37"
     //% blockHidden=true
-    //% subcategory="Sensor"
-    //% group="I2C Tools"
+    //% subcategory="RobotShield"
     //% help=github:acebott/docs/reference
     export function stcI2cCheck(): boolean {
         return acebottI2cProbe(0x37)
@@ -193,8 +188,7 @@ namespace Acebott {
     //% blockId=adc7828I2cCheck block="check ADC7828 I2C address %addr"
     //% blockHidden=true
     //% addr.defl=Adc7828I2cAddress.Address0x48
-    //% subcategory="Sensor"
-    //% group="I2C Tools"
+    //% subcategory="RobotShield"
     //% help=github:acebott/docs/reference
     export function adc7828I2cCheck(addr: Adc7828I2cAddress): boolean {
         return acebottI2cProbe(addr)
@@ -207,8 +201,7 @@ namespace Acebott {
     //% blockId=i2cInitCheck block="I2C initialization check|ADC address %addr"
     //% blockHidden=true
     //% addr.defl=Adc7828I2cAddress.Address0x48
-    //% subcategory="Sensor"
-    //% group="ADC7828 Sensor"
+    //% subcategory="RobotShield"
     //% help=github:acebott/docs/reference
     export function i2cInitCheck(addr: Adc7828I2cAddress): boolean {
         return stcI2cCheck() && adc7828I2cCheck(addr)
@@ -231,8 +224,7 @@ namespace Acebott {
     //% blockId=stcServoAngle block="microbit robotic arm|channel %channel|angle %degree"
     //% channel.min=0 channel.max=5 channel.defl=0
     //% degree.min=0 degree.max=180 degree.defl=90
-    //% group="Microbit Controller"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% help=github:acebott/docs/reference
     export function stcServoAngle(channel: number, degree: number): void {
         initSTC()
@@ -709,8 +701,7 @@ namespace Acebott {
     //% shoulder.defl=ArmOutputChannel.STC1
     //% elbow.defl=ArmOutputChannel.STC2
     //% claws.defl=ArmOutputChannel.STC3
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=100
     //% help=github:acebott/docs/reference
     export function armInitialize(
@@ -734,8 +725,7 @@ namespace Acebott {
     //% blockId=armSetJoint block="set robotic arm %joint|angle %angle|speed %speed"
     //% angle.min=0 angle.max=180 angle.defl=90
     //% speed.min=1 speed.max=100 speed.defl=50
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=95
     //% help=github:acebott/docs/reference
     export function armSetJoint(joint: ArmJoint, angle: number, speed: number): void {
@@ -765,8 +755,7 @@ namespace Acebott {
     //% elbow.min=0 elbow.max=120 elbow.defl=90
     //% claws.min=90 claws.max=180 claws.defl=90
     //% inlineInputMode=inline
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=94
     //% help=github:acebott/docs/reference
     export function armSetPose(
@@ -781,8 +770,7 @@ namespace Acebott {
     /** Select one speed preset for both joint and XYZ moves. */
     //% blockId=armSetSpeed block="set robotic arm speed %speed"
     //% speed.defl=ArmSpeed.Slow
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=91
     //% help=github:acebott/docs/reference
     export function armSetSpeed(speed: ArmSpeed): void {
@@ -801,8 +789,7 @@ namespace Acebott {
     /** Open to 150 degrees or close to 90 degrees, keeping the other joints still. */
     //% blockId=armClaw block="robotic arm claw %state"
     //% state.defl=ArmClawState.Open
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function armClaw(state: ArmClawState): void {
@@ -818,8 +805,7 @@ namespace Acebott {
 
     /** Return all four joints to 90 degrees without changing the XYZ origin. */
     //% blockId=armHomePose block="robotic arm return to home pose"
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=89
     //% help=github:acebott/docs/reference
     export function armHomePose(): void {
@@ -832,8 +818,7 @@ namespace Acebott {
 
     /** Smoothly reset the four joints to 90 degrees and use that pose as XYZ (0,0,0). */
     //% blockId=armReset block="robotic arm reset"
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=93
     //% help=github:acebott/docs/reference
     export function armReset(): void {
@@ -861,8 +846,7 @@ namespace Acebott {
     //% channel.defl=ArmOutputChannel.STC0
     //% angle.min=0 angle.max=180 angle.defl=90
     //% speed.min=1 speed.max=100 speed.defl=50
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=92
     //% help=github:acebott/docs/reference
     export function armSetOutput(
@@ -900,8 +884,7 @@ namespace Acebott {
 
     /** Save, run, or delete recorded robotic-arm poses. */
     //% blockId=armMemory block="robotic arm memory %mode"
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function armMemory(mode: ArmMemoryMode): void {
@@ -1237,8 +1220,7 @@ namespace Acebott {
     //% x.defl=0
     //% y.defl=0
     //% z.defl=0
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=85
     //% help=github:acebott/docs/reference
     export function armSetPosition(x: number, y: number, z: number): void {
@@ -1322,8 +1304,7 @@ namespace Acebott {
 
     /** Get modeled XYZ in centimeters; armReset makes the home pose the origin. */
     //% blockId=armGetCoordinate block="get robotic arm coordinate %axis"
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=80
     //% help=github:acebott/docs/reference
     export function armGetCoordinate(axis: ArmCoordinateAxis): number {
@@ -1333,8 +1314,7 @@ namespace Acebott {
 
     /** Get the current angle of one robotic-arm joint. */
     //% blockId=armGetJointAngle block="get robotic arm %joint angle"
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=75
     //% help=github:acebott/docs/reference
     export function armGetJointAngle(joint: ArmJoint): number {
@@ -1347,8 +1327,7 @@ namespace Acebott {
     //% xChannel.defl=Adc7828Channel.CH0
     //% yChannel.defl=Adc7828Channel.CH1
     //% swChannel.defl=Adc7828Channel.CH4
-    //% group="ADC7828 Sensor"
-    //% subcategory="Sensor"
+    //% subcategory="RobotShield"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function armSetJoystick(
@@ -1369,8 +1348,7 @@ namespace Acebott {
 
     /** Read the raw X, Y, or SW value from a configured joystick (0-255). */
     //% blockId=armReadJoystick block="read %side joystick %value value"
-    //% group="ADC7828 Sensor"
-    //% subcategory="Sensor"
+    //% subcategory="RobotShield"
     //% weight=85
     //% help=github:acebott/docs/reference
     export function armReadJoystick(
@@ -1468,8 +1446,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH0
     //% outputChannel.defl=ArmOutputChannel.STC0
     //% step.min=1 step.max=20 step.defl=1
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function armBaseControl(
@@ -1488,8 +1465,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH0
     //% outputChannel.defl=ArmOutputChannel.STC0
     //% step.min=1 step.max=20 step.defl=1
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=100
     //% help=github:acebott/docs/reference
     export function chassisControl(
@@ -1508,8 +1484,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH1
     //% outputChannel.defl=ArmOutputChannel.STC1
     //% step.min=1 step.max=20 step.defl=1
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=95
     //% help=github:acebott/docs/reference
     export function shoulderControl(
@@ -1528,8 +1503,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH2
     //% outputChannel.defl=ArmOutputChannel.STC2
     //% step.min=1 step.max=20 step.defl=1
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=90
     //% help=github:acebott/docs/reference
     export function elbowControl(
@@ -1548,8 +1522,7 @@ namespace Acebott {
     //% adcChannel.defl=Adc7828Channel.CH3
     //% outputChannel.defl=ArmOutputChannel.STC3
     //% step.min=1 step.max=20 step.defl=1
-    //% group="Microbit Robotic Arm"
-    //% subcategory="Executive"
+    //% subcategory="RobotShield"
     //% weight=85
     //% help=github:acebott/docs/reference
     export function clawsControl(

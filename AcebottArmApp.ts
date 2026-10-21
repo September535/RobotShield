@@ -210,7 +210,7 @@ namespace Acebott {
     /** Convert APP text to three numbers; actual movement uses armSetPosition. */
     //% blockId=acebott_arm_app_parse_xyz block="convert APP XYZ text %coordinates to a number list"
     //% coordinates.defl="7 13 2"
-    //% group="Microbit Robotic Arm APP" subcategory="Executive" weight=80
+    //% subcategory="RobotShield" weight=80
     export function armAppParseCoordinates(coordinates: string): number[] {
         let normalized = ""
         for (let index = 0; index < coordinates.length; index++) {
@@ -389,7 +389,7 @@ namespace Acebott {
     /** 机械臂产生结果时触发；由主程序决定显示、打印或发送方式。 */
     //% blockId=acebott_arm_app_result block="when robotic arm reports a result"
     //% draggableParameters="reporter"
-    //% group="Microbit Robotic Arm APP" subcategory="Executive" weight=84
+    //% subcategory="RobotShield" weight=84
     export function onArmAppResult(handler: (message: string) => void): void {
         appMessageHandler = handler
     }
@@ -397,7 +397,7 @@ namespace Acebott {
     /** Invalid angle text returns -1 and reports an error. */
     //% blockId=acebott_arm_app_parse_angle block="convert APP angle text %angleText to a number"
     //% angleText.defl="90"
-    //% group="Microbit Robotic Arm APP" subcategory="Executive" weight=81
+    //% subcategory="RobotShield" weight=81
     export function armAppParseAngle(angleText: string): number {
         if (!appNumberValid(angleText, true)) {
             appStatus("UNKNOWN COMMAND")
@@ -431,7 +431,7 @@ namespace Acebott {
 
     /** 设置机械臂动作状态；先使用初始化机械臂积木设置输出通道。 */
     //% blockId=acebott_arm_app_prepare block="prepare APP arm control"
-    //% group="Microbit Robotic Arm APP" subcategory="Executive" weight=83
+    //% subcategory="RobotShield" weight=83
     export function armAppPrepare(): void {
         if (!appStarted) {
             appStarted = true
@@ -451,7 +451,7 @@ namespace Acebott {
     //% blockId=acebott_arm_app_joystick block="set APP %side direction %direction"
     //% side.defl=Acebott.ArmAppSide.Left
     //% direction.min=0 direction.max=4 direction.defl=0
-    //% group="Microbit Robotic Arm APP" subcategory="Executive" weight=82
+    //% subcategory="RobotShield" weight=82
     export function armAppSetJoystick(side: ArmAppSide, direction: number): void {
         if (!appStarted) {
             return
@@ -474,7 +474,7 @@ namespace Acebott {
     /** 选择 1、2、3 记忆组，保留其他组数据，停止当前回放和记录。 */
     //% blockId=acebott_arm_app_group block="select APP arm memory group %group"
     //% group.min=1 group.max=3 group.defl=1
-    //% group="Microbit Robotic Arm APP" subcategory="Executive" weight=77
+    //% subcategory="RobotShield" weight=77
     export function armAppSelectGroup(group: number): void {
         if (appStarted && group >= 1 && group <= 3 && group == Math.round(group)) {
             appCancelXYZ()
@@ -486,7 +486,7 @@ namespace Acebott {
 
     /** 清除待执行的手动输入，停止回放、记录及回位；不清除已保存姿态。 */
     //% blockId=acebott_arm_app_stop block="stop APP arm actions"
-    //% group="Microbit Robotic Arm APP" subcategory="Executive" weight=76
+    //% subcategory="RobotShield" weight=76
     export function armAppStop(): void {
         appCancelXYZ()
         appClearManual()
@@ -497,7 +497,7 @@ namespace Acebott {
 
     /** 放在重复执行中，每轮推进摇杆、滑块、复位或回放。 */
     //% blockId=acebott_arm_app_update block="update APP arm actions"
-    //% group="Microbit Robotic Arm APP" subcategory="Executive" weight=75
+    //% subcategory="RobotShield" weight=75
     export function armAppUpdate(): void {
         if (!appStarted || appXYZExecuting || control.millis() - appLastTick < 20) {
             return

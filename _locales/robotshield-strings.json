@@ -82,12 +82,5 @@
     "Acebott.onArmAppResult|block": "when robotic arm reports a result",
     "{id:category}Acebott": "RobotShield",
     "{id:category}RobotShield": "RobotShield",
-    "{id:group}Microbit Controller": "Servo outputs",
-    "{id:group}Microbit Robotic Arm": "Robotic arm",
-    "{id:group}Microbit Robotic Arm APP": "APP control",
-    "{id:group}ADC7828 Sensor": "Joystick",
-    "{id:group}I2C Tools": "Controller diagnostics",
-    "{id:subcategory}Executive": "Arm control",
-    "{id:subcategory}Sensor": "Joystick",
-    "{id:subcategory}Display": "Diagnostics"
+    "{id:subcategory}RobotShield": "RobotShield"
 }

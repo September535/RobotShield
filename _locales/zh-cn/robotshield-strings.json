@@ -83,12 +83,5 @@
     "Acebott.onArmAppResult|block": "当机械臂产生结果",
     "{id:category}Acebott": "RobotShield",
     "{id:category}RobotShield": "RobotShield",
-    "{id:group}Microbit Controller": "舵机输出",
-    "{id:group}Microbit Robotic Arm": "机械臂控制",
-    "{id:group}Microbit Robotic Arm APP": "APP 控制",
-    "{id:group}ADC7828 Sensor": "摇杆",
-    "{id:group}I2C Tools": "控制板诊断",
-    "{id:subcategory}Executive": "机械臂控制",
-    "{id:subcategory}Sensor": "摇杆",
-    "{id:subcategory}Display": "诊断"
+    "{id:subcategory}RobotShield": "RobotShield"
 }
