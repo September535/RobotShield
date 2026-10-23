@@ -20,6 +20,7 @@ namespace Acebott {
     let appMessageHandler: (message: string) => void = null
 
     let appStarted = false
+    let appUpdating = false
     let appAngles = [90, 90, 90, 90]
     let appSliderTargets = [90, 90, 90, 90]
     let appSliderPending = [false, false, false, false]
@@ -194,9 +195,6 @@ namespace Acebott {
     }
 
     /** Convert APP text to three numbers; actual movement uses armSetPosition. */
-    //% blockId=acebott_arm_app_parse_xyz block="convert APP XYZ text %coordinates to a number list"
-    //% coordinates.defl="7 13 2"
-    //% subcategory="RobotShield" group="APP control" weight=80
     export function armAppParseCoordinates(coordinates: string): number[] {
         let normalized = ""
         for (let index = 0; index < coordinates.length; index++) {
@@ -381,9 +379,6 @@ namespace Acebott {
     }
 
     /** Invalid angle text returns -1 and reports an error. */
-    //% blockId=acebott_arm_app_parse_angle block="convert APP angle text %angleText to a number"
-    //% angleText.defl="90"
-    //% subcategory="RobotShield" group="APP control" weight=81
     export function armAppParseAngle(angleText: string): number {
         if (!appNumberValid(angleText, true)) {
             appStatus("UNKNOWN COMMAND")
@@ -411,8 +406,6 @@ namespace Acebott {
     }
 
     /** 设置机械臂动作状态；先使用初始化机械臂积木设置输出通道。 */
-    //% blockId=acebott_arm_app_prepare block="prepare APP arm control"
-    //% subcategory="RobotShield" group="APP control" weight=83
     export function armAppPrepare(): void {
         if (!appStarted) {
             appStarted = true
@@ -424,7 +417,13 @@ namespace Acebott {
                 appMemory(mode)
             })
             appReadAngles()
-            appReset()
+            // 自动准备只接入调度，不隐式回位或改变关节角度。
+            control.inBackground(function () {
+                while (true) {
+                    armAppUpdate()
+                    basic.pause(20)
+                }
+            })
         }
     }
 
@@ -504,10 +503,7 @@ namespace Acebott {
     //% data.defl="1101#"
     //% subcategory="RobotShield" group="APP control" weight=85
     export function armAppReceive(data: string): void {
-        if (!appStarted) {
-            appStatus("APP NOT PREPARED")
-            return
-        }
+        armAppPrepare()
         for (let index = 0; index < data.length; index++) {
             let character = data.charAt(index)
             if (character == "#") {
@@ -543,6 +539,7 @@ namespace Acebott {
     //% group.min=1 group.max=3 group.defl=1
     //% subcategory="RobotShield" group="APP control" weight=77
     export function armAppSelectGroup(group: number): void {
+        armAppPrepare()
         if (appStarted && group >= 1 && group <= 3 && group == Math.round(group)) {
             appCancelXYZ()
             appStopPlayback()
@@ -552,8 +549,6 @@ namespace Acebott {
     }
 
     /** 清除待执行的手动输入，停止回放、记录及回位；不清除已保存姿态。 */
-    //% blockId=acebott_arm_app_stop block="stop APP arm actions"
-    //% subcategory="RobotShield" group="APP control" weight=76
     export function armAppStop(): void {
         appCancelXYZ()
         appClearManual()
@@ -568,12 +563,11 @@ namespace Acebott {
     }
 
     /** 放在重复执行中，每轮推进滑块、坐标、复位或回放；方向键动作由主程序定义。 */
-    //% blockId=acebott_arm_app_update block="update APP arm actions"
-    //% subcategory="RobotShield" group="APP control" weight=75
     export function armAppUpdate(): void {
-        if (!appStarted || appXYZExecuting || control.millis() - appLastTick < 20) {
+        if (!appStarted || appUpdating || appXYZExecuting || control.millis() - appLastTick < 20) {
             return
         }
+        appUpdating = true
         appLastTick = control.millis()
         appReadAngles()
         if (appXYZPending) {
@@ -585,5 +579,6 @@ namespace Acebott {
         } else {
             appManualUpdate()
         }
+        appUpdating = false
     }
 }

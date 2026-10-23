@@ -33,58 +33,8 @@ class AcebottSTC {
 
 // Mechanical-arm support extracted from AcebottAdvanced.ts and AcebottMicrobit.ts.
 //% color="#0B3D91" weight=100 icon="\uf1b9" block="RobotShield"
-//% groups='["Arm actions", "APP control", "Joystick", "Diagnostics"]'
+//% groups='["Arm actions", "APP control", "Diagnostics"]'
 namespace Acebott {
-    let adc7828Init = false
-    let adc7828: AcebottADC7828
-
-    export enum Adc7828Channel {
-        //% block="CH0"
-        CH0 = 0,
-        //% block="CH1"
-        CH1 = 1,
-        //% block="CH2"
-        CH2 = 2,
-        //% block="CH3"
-        CH3 = 3,
-        //% block="CH4"
-        CH4 = 4,
-        //% block="CH5"
-        CH5 = 5,
-        //% block="CH6"
-        CH6 = 6,
-        //% block="CH7"
-        CH7 = 7
-    }
-
-    function initADC7828(): void {
-        if (!adc7828Init) {
-            adc7828 = new AcebottADC7828()
-            adc7828Init = true
-        }
-    }
-    /**
-     * ADC7828 read channel.
-     */
-
-    //% blockId=adc7828ReadChannel block="ADC7828 read channel %channel"
-    //% subcategory="RobotShield" group="Joystick"
-    //% help=github:acebott/docs/reference
-    export function adc7828ReadChannel(channel: Adc7828Channel): number {
-        initADC7828()
-        return adc7828.readChannel(channel)
-    }
-    /**
-     * ADC7828 set address.
-     */
-
-    //% blockId=adc7828SetAddress block="ADC7828 set address %addr"
-    //% subcategory="RobotShield" group="Joystick"
-    //% help=github:acebott/docs/reference
-    export function adc7828SetAddress(addr: Adc7828I2cAddress): void {
-        initADC7828()
-        adc7828.setAddress(addr)
-    }
     function acebottI2cProbe(address: number): boolean {
         // 0x00-0x07 and 0x78-0x7F are reserved 7-bit addresses.
         if (address < 0x08 || address > 0x77) {
@@ -182,33 +132,6 @@ namespace Acebott {
         return acebottI2cProbe(0x37)
     }
 
-    /**
-     * Legacy ADC7828 check retained for existing projects.
-     * It is hidden from the blocks toolbox.
-     */
-    //% blockId=adc7828I2cCheck block="check ADC7828 I2C address %addr"
-    //% blockHidden=true
-    //% addr.defl=Adc7828I2cAddress.Address0x48
-    //% subcategory="RobotShield" group="Diagnostics"
-    //% help=github:acebott/docs/reference
-    export function adc7828I2cCheck(addr: Adc7828I2cAddress): boolean {
-        return acebottI2cProbe(addr)
-    }
-
-    /**
-     * Legacy combined check retained only for existing projects.
-     * It is silent and hidden from the blocks toolbox.
-     */
-    //% blockId=i2cInitCheck block="I2C initialization check|ADC address %addr"
-    //% blockHidden=true
-    //% addr.defl=Adc7828I2cAddress.Address0x48
-    //% subcategory="RobotShield" group="Diagnostics"
-    //% help=github:acebott/docs/reference
-    export function i2cInitCheck(addr: Adc7828I2cAddress): boolean {
-        return stcI2cCheck() && adc7828I2cCheck(addr)
-    }
-
-
     let stcInit = false
     let stc: AcebottSTC
 
@@ -235,7 +158,7 @@ namespace Acebott {
 }
 
 // AcebottArm.ts
-// First robotic-arm block: control the base joint with the ADC7828 joystick.
+// Robotic arm joint, pose and coordinate control.
 
 namespace Acebott {
     /**
@@ -320,30 +243,10 @@ namespace Acebott {
         Z = 2
     }
 
-    /** Left or right ADC7828 joystick. */
-    export enum ArmJoystickSide {
-        //% block="left"
-        Left = 0,
-        //% block="right"
-        Right = 1
-    }
-
-    /** Raw value to read from a configured ADC7828 joystick. */
-    export enum ArmJoystickValue {
-        //% block="X"
-        X = 0,
-        //% block="Y"
-        Y = 1,
-        //% block="SW"
-        SW = 2
-    }
-
     const ARM_BASE_HEIGHT = 8
     const ARM_SHOULDER_LENGTH = 7
     const ARM_ELBOW_LENGTH = 12
     const ARM_MAX_MEMORY_STATES = 20
-    const ARM_JOYSTICK_LOW = 50
-    const ARM_JOYSTICK_HIGH = 250
     const ARM_DEG_TO_RAD = 0.017453292519943295
     const ARM_RAD_TO_DEG = 57.2957795
 
@@ -381,14 +284,8 @@ namespace Acebott {
     let armMemoryElbow: number[] = []
     let armMemoryClaws: number[] = []
 
-    let armLeftJoystick = [0, 1, 4]
-    let armRightJoystick = [2, 3, 5]
-    let armLeftJoystickConfigured = false
-    let armRightJoystickConfigured = false
-    let armJoystickLoopStarted = false
 
     // XYZ conversion and measured calibration from the supplied IK-v1 program.
-    let ARM_XYZ_MOVE_STEP_MS = 10
     let armXYZBusy = false
     let armXYZLastResult = ""
     let armXYZCalibrationReady = false
@@ -429,15 +326,6 @@ namespace Acebott {
     let armXYZYawExtrapolated = false
     let armXYZConversionMode = "READY"
 
-    let armXYZPoseG = 0
-    let armXYZPoseE = 0
-    let armXYZPoseS = 0
-    let armXYZPoseC = 0
-    let armXYZSteps = 0
-    let armXYZStartG = 0
-    let armXYZStartE = 0
-    let armXYZStartS = 0
-    let armXYZStartC = 0
     let armXYZDistance = 0
     let armXYZOutputElbow = 0
     let armXYZOutputShoulder = 0
@@ -497,26 +385,6 @@ namespace Acebott {
 
     function isArmJointPairSafe(shoulder: number, elbow: number): boolean {
         return shoulder >= armShoulderMinimumForElbow(elbow)
-    }
-
-    function writeArmJoint(joint: ArmJoint, angle: number): void {
-        angle = constrainArmJointAngle(joint, angle)
-
-        let proposedShoulder = armJointAngles[ArmJoint.Shoulder]
-        let proposedElbow = armJointAngles[ArmJoint.Elbow]
-        if (joint == ArmJoint.Shoulder) {
-            proposedShoulder = angle
-        } else if (joint == ArmJoint.Elbow) {
-            proposedElbow = angle
-        }
-
-        // Stop only the requested joint when the shoulder/elbow limit is reached.
-        if (!isArmJointPairSafe(proposedShoulder, proposedElbow)) {
-            return
-        }
-
-        armJointAngles[joint] = angle
-        writeArmOutput(armJointOutputs[joint], angle)
     }
 
     // Validate and update one complete four-joint pose as a single operation.
@@ -644,57 +512,6 @@ namespace Acebott {
         serial.writeLine("Arm poses deleted")
     }
 
-    function adjustArmJoint(joint: ArmJoint, delta: number): void {
-        writeArmJoint(joint, armJointAngles[joint] + delta)
-    }
-
-    function updateArmJoystick(): void {
-        if (armLeftJoystickConfigured) {
-            let leftX = adc7828ReadChannel(armLeftJoystick[0])
-            let leftY = adc7828ReadChannel(armLeftJoystick[1])
-
-            if (leftY < ARM_JOYSTICK_LOW) {
-                adjustArmJoint(ArmJoint.Chassis, 1)
-            } else if (leftY > ARM_JOYSTICK_HIGH) {
-                adjustArmJoint(ArmJoint.Chassis, -1)
-            }
-            if (leftX < ARM_JOYSTICK_LOW) {
-                adjustArmJoint(ArmJoint.Shoulder, 1)
-            } else if (leftX > ARM_JOYSTICK_HIGH) {
-                adjustArmJoint(ArmJoint.Shoulder, -1)
-            }
-        }
-
-        if (armRightJoystickConfigured) {
-            let rightX = adc7828ReadChannel(armRightJoystick[0])
-            let rightY = adc7828ReadChannel(armRightJoystick[1])
-
-            if (rightX < ARM_JOYSTICK_LOW) {
-                adjustArmJoint(ArmJoint.Elbow, 1)
-            } else if (rightX > ARM_JOYSTICK_HIGH) {
-                adjustArmJoint(ArmJoint.Elbow, -1)
-            }
-            if (rightY > ARM_JOYSTICK_HIGH) {
-                adjustArmJoint(ArmJoint.Claws, 1)
-            } else if (rightY < ARM_JOYSTICK_LOW) {
-                adjustArmJoint(ArmJoint.Claws, -1)
-            }
-        }
-    }
-
-    function ensureArmJoystickLoop(): void {
-        if (armJoystickLoopStarted) {
-            return
-        }
-        armJoystickLoopStarted = true
-        control.inBackground(function () {
-            while (true) {
-                updateArmJoystick()
-                basic.pause(20)
-            }
-        })
-    }
-
     /** Configure joint output channels without moving servos or resetting the pose. */
     //% blockId=armInitialize block="robotic arm initialize chassis %chassis shoulder %shoulder elbow %elbow claws %claws"
     //% inlineInputMode=inline
@@ -763,7 +580,7 @@ namespace Acebott {
         writeArmPose(chassis, shoulder, elbow, claws)
     }
 
-    /** Select one speed preset for both joint and XYZ moves. */
+    /** Select joint, claw and home speed; XYZ uses fixed 1-degree / 20-ms steps. */
     //% blockId=armSetSpeed block="set robotic arm speed %speed"
     //% speed.defl=ArmSpeed.Slow
     //% subcategory="RobotShield" group="Arm actions"
@@ -772,13 +589,10 @@ namespace Acebott {
     export function armSetSpeed(speed: ArmSpeed): void {
         if (speed == ArmSpeed.Slow) {
             armLastSpeed = 10
-            ARM_XYZ_MOVE_STEP_MS = 20
         } else if (speed == ArmSpeed.Medium) {
             armLastSpeed = 50
-            ARM_XYZ_MOVE_STEP_MS = 10
         } else {
             armLastSpeed = 90
-            ARM_XYZ_MOVE_STEP_MS = 5
         }
     }
 
@@ -850,14 +664,6 @@ namespace Acebott {
             deleteArmPoses()
         } else {
             serial.writeLine("APP memory control is not prepared")
-        }
-    }
-
-    function armXYZWaitTransport(ms: number): void {
-        for (let index = 0; index < Math.ceil(ms / 20); index++) {
-            if (armXYZTransportRunning) {
-                basic.pause(20)
-            }
         }
     }
 
@@ -1130,40 +936,43 @@ namespace Acebott {
         }
     }
 
+    // 每次调用独立保存插值起点、步数和中间角度；沿用外部测试的 1° / 20ms。
     function armXYZMovePoseSlow(c: number, s: number, e: number, g: number): void {
-        if (armXYZTransportRunning) {
-            armXYZStartC = Acebott.armGetJointAngle(Acebott.ArmJoint.Chassis)
-            armXYZStartS = Acebott.armGetJointAngle(Acebott.ArmJoint.Shoulder)
-            armXYZStartE = Acebott.armGetJointAngle(Acebott.ArmJoint.Elbow)
-            armXYZStartG = Acebott.armGetJointAngle(Acebott.ArmJoint.Claws)
-            armXYZSteps = Math.max(Math.max(Math.abs(c - armXYZStartC), Math.abs(s - armXYZStartS)), Math.max(Math.abs(e - armXYZStartE), Math.abs(g - armXYZStartG)))
-            armXYZSteps = Math.max(1, Math.ceil(armXYZSteps))
-            // 先检查全部插值点；发现超限时，本次移动不发送舵机指令。
-            for (let step = 0; step <= armXYZSteps - 1; step++) {
-                if (armXYZTransportRunning) {
-                    armXYZPoseC = Math.round(armXYZStartC + (c - armXYZStartC) * (step + 1) / armXYZSteps)
-                    armXYZPoseS = Math.round(armXYZStartS + (s - armXYZStartS) * (step + 1) / armXYZSteps)
-                    armXYZPoseE = Math.round(armXYZStartE + (e - armXYZStartE) * (step + 1) / armXYZSteps)
-                    armXYZPoseG = Math.round(armXYZStartG + (g - armXYZStartG) * (step + 1) / armXYZSteps)
-                    armXYZCheckPoseLimit(armXYZPoseC, armXYZPoseS, armXYZPoseE, armXYZPoseG)
-                    if (!(armXYZPoseAllowed)) {
-                        serial.writeLine("PATH LIMIT stage=" + armXYZTransportStage + " step=" + (step + 1) + "/" + armXYZSteps + " C=" + armXYZPoseC + " S=" + armXYZPoseS + " E=" + armXYZPoseE + " G=" + armXYZPoseG + " Smin=" + Math.ceil(armXYZMinimumShoulder))
-                        armXYZLastResult = "XYZ JOINT LIMIT"
-                        armXYZTransportRunning = false
-                    }
-                }
+        if (!armXYZTransportRunning) {
+            return
+        }
+        let startC = armGetJointAngle(ArmJoint.Chassis)
+        let startS = armGetJointAngle(ArmJoint.Shoulder)
+        let startE = armGetJointAngle(ArmJoint.Elbow)
+        let startG = armGetJointAngle(ArmJoint.Claws)
+        let delta = Math.max(Math.max(Math.abs(c - startC), Math.abs(s - startS)), Math.max(Math.abs(e - startE), Math.abs(g - startG)))
+        let steps = Math.ceil(delta)
+        // 保留整条路径预检，避免移动到一半才发现限位。
+        for (let step = 1; step <= steps; step++) {
+            let pc = Math.round(startC + (c - startC) * step / steps)
+            let ps = Math.round(startS + (s - startS) * step / steps)
+            let pe = Math.round(startE + (e - startE) * step / steps)
+            let pg = Math.round(startG + (g - startG) * step / steps)
+            armXYZCheckPoseLimit(pc, ps, pe, pg)
+            if (!armXYZPoseAllowed) {
+                armXYZLastResult = "XYZ JOINT LIMIT"
+                armXYZTransportRunning = false
+                return
             }
-            // 预检通过后，沿同一组插值点移动，并检查四关节缓存。
-            for (let step = 0; step <= armXYZSteps - 1; step++) {
-                if (armXYZTransportRunning) {
-                    armXYZPoseC = Math.round(armXYZStartC + (c - armXYZStartC) * (step + 1) / armXYZSteps)
-                    armXYZPoseS = Math.round(armXYZStartS + (s - armXYZStartS) * (step + 1) / armXYZSteps)
-                    armXYZPoseE = Math.round(armXYZStartE + (e - armXYZStartE) * (step + 1) / armXYZSteps)
-                    armXYZPoseG = Math.round(armXYZStartG + (g - armXYZStartG) * (step + 1) / armXYZSteps)
-                    armXYZApplyLimitedPose(armXYZPoseC, armXYZPoseS, armXYZPoseE, armXYZPoseG)
-                    armXYZWaitTransport(ARM_XYZ_MOVE_STEP_MS)
-                }
+        }
+        for (let step = 1; step <= steps; step++) {
+            if (!armXYZTransportRunning) {
+                return
             }
+            let pc = Math.round(startC + (c - startC) * step / steps)
+            let ps = Math.round(startS + (s - startS) * step / steps)
+            let pe = Math.round(startE + (e - startE) * step / steps)
+            let pg = Math.round(startG + (g - startG) * step / steps)
+            armXYZApplyLimitedPose(pc, ps, pe, pg)
+            if (!armXYZTransportRunning) {
+                return
+            }
+            basic.pause(20)
         }
     }
 
@@ -1273,53 +1082,6 @@ namespace Acebott {
         return armJointAngles[joint]
     }
 
-    /** Configure one ADC7828 joystick and start background arm control. */
-    //% blockId=armSetJoystick block="set %side joystick X %xChannel Y %yChannel SW %swChannel"
-    //% inlineInputMode=inline
-    //% xChannel.defl=Adc7828Channel.CH0
-    //% yChannel.defl=Adc7828Channel.CH1
-    //% swChannel.defl=Adc7828Channel.CH4
-    //% subcategory="RobotShield" group="Joystick"
-    //% weight=90
-    //% help=github:acebott/docs/reference
-    export function armSetJoystick(
-        side: ArmJoystickSide,
-        xChannel: Adc7828Channel,
-        yChannel: Adc7828Channel,
-        swChannel: Adc7828Channel
-    ): void {
-        if (side == ArmJoystickSide.Left) {
-            armLeftJoystick = [xChannel, yChannel, swChannel]
-            armLeftJoystickConfigured = true
-        } else {
-            armRightJoystick = [xChannel, yChannel, swChannel]
-            armRightJoystickConfigured = true
-        }
-        ensureArmJoystickLoop()
-    }
-
-    /** Read the raw X, Y, or SW value from a configured joystick (0-255). */
-    //% blockId=armReadJoystick block="read %side joystick %value value"
-    //% subcategory="RobotShield" group="Joystick"
-    //% weight=85
-    //% help=github:acebott/docs/reference
-    export function armReadJoystick(
-        side: ArmJoystickSide,
-        value: ArmJoystickValue
-    ): number {
-        if (side == ArmJoystickSide.Left) {
-            return adc7828ReadChannel(armLeftJoystick[value])
-        }
-        return adc7828ReadChannel(armRightJoystick[value])
-    }
-
-    const ARM_ADC_LOW = 50
-    const ARM_ADC_HIGH = 200
-
-    // Every physical output keeps an independent angle.
-    let armOutputAngles = [90, 90, 90, 90, 90, 90, 90, 90]
-    let armOutputLastAngles = [-1, -1, -1, -1, -1, -1, -1, -1]
-
     function writeArmOutput(channel: ArmOutputChannel, angle: number): void {
         angle = constrainArmOutputAngle(channel, angle)
 
@@ -1330,159 +1092,11 @@ namespace Acebott {
         } else if (channel == ArmOutputChannel.MicrobitP12) {
             pins.servoWritePin(AnalogPin.P12, angle)
         }
-        // Keep output and mapped-joint caches synchronized, including after reset.
-        armOutputAngles[channel] = angle
-        armOutputLastAngles[channel] = angle
+        // Keep mapped-joint angles synchronized, including after reset.
         for (let joint = 0; joint < 4; joint++) {
             if (armJointOutputs[joint] == channel) {
                 armJointAngles[joint] = angle
             }
         }
     }
-
-    function controlArmJoint(
-        adcChannel: Adc7828Channel,
-        outputChannel: ArmOutputChannel,
-        step: number,
-        minAngle: number,
-        maxAngle: number,
-        reverse: boolean
-    ): void {
-        let outputIndex = outputChannel
-        if (outputIndex < 0 || outputIndex > 7) {
-            return
-        }
-
-        minAngle = Math.constrain(minAngle, 0, 180)
-        maxAngle = Math.constrain(maxAngle, minAngle, 180)
-
-        let adcValue = adc7828ReadChannel(adcChannel)
-        let angle = armOutputAngles[outputIndex]
-
-        if (step < 1) {
-            step = 1
-        }
-        if (step > 20) {
-            step = 20
-        }
-
-        if (adcValue > ARM_ADC_HIGH) {
-            if (reverse) {
-                angle -= step
-            } else {
-                angle += step
-            }
-        } else if (adcValue < ARM_ADC_LOW) {
-            if (reverse) {
-                angle += step
-            } else {
-                angle -= step
-            }
-        }
-
-        angle = constrainArmOutputAngle(outputChannel, Math.constrain(angle, minAngle, maxAngle))
-        armOutputAngles[outputIndex] = angle
-
-        if (angle != armOutputLastAngles[outputIndex]) {
-            writeArmOutput(outputChannel, angle)
-            armOutputLastAngles[outputIndex] = angle
-        }
-    }
-
-    /**
-     * Control a robotic arm joint with the ADC7828 joystick.
-     * Put this block inside forever.
-     */
-    //% blockId=armBaseControl block="robotic arm joint|controller %adcChannel|output %outputChannel|step %step"
-    //% blockHidden=true
-    //% adcChannel.defl=Adc7828Channel.CH0
-    //% outputChannel.defl=ArmOutputChannel.STC0
-    //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield" group="Arm actions"
-    //% weight=90
-    //% help=github:acebott/docs/reference
-    export function armBaseControl(
-        adcChannel: Adc7828Channel,
-        outputChannel: ArmOutputChannel,
-        step: number
-    ): void {
-        controlArmJoint(adcChannel, outputChannel, step, 0, 180, false)
-    }
-
-    /**
-     * Control the robotic arm chassis. Its joystick direction is reversed.
-     */
-    //% blockId=armChassisControl block="robotic arm chassis|controller %adcChannel|output %outputChannel|step %step"
-    //% blockHidden=true
-    //% adcChannel.defl=Adc7828Channel.CH0
-    //% outputChannel.defl=ArmOutputChannel.STC0
-    //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield" group="Arm actions"
-    //% weight=100
-    //% help=github:acebott/docs/reference
-    export function chassisControl(
-        adcChannel: Adc7828Channel,
-        outputChannel: ArmOutputChannel,
-        step: number
-    ): void {
-        controlArmJoint(adcChannel, outputChannel, step, 0, 180, true)
-    }
-
-    /**
-     * Control the robotic arm shoulder.
-     */
-    //% blockId=armShoulderControl block="robotic arm shoulder|controller %adcChannel|output %outputChannel|step %step"
-    //% blockHidden=true
-    //% adcChannel.defl=Adc7828Channel.CH1
-    //% outputChannel.defl=ArmOutputChannel.STC1
-    //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield" group="Arm actions"
-    //% weight=95
-    //% help=github:acebott/docs/reference
-    export function shoulderControl(
-        adcChannel: Adc7828Channel,
-        outputChannel: ArmOutputChannel,
-        step: number
-    ): void {
-        controlArmJoint(adcChannel, outputChannel, step, 0, 180, false)
-    }
-
-    /**
-     * Control the robotic arm elbow.
-     */
-    //% blockId=armElbowControl block="robotic arm elbow|controller %adcChannel|output %outputChannel|step %step"
-    //% blockHidden=true
-    //% adcChannel.defl=Adc7828Channel.CH2
-    //% outputChannel.defl=ArmOutputChannel.STC2
-    //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield" group="Arm actions"
-    //% weight=90
-    //% help=github:acebott/docs/reference
-    export function elbowControl(
-        adcChannel: Adc7828Channel,
-        outputChannel: ArmOutputChannel,
-        step: number
-    ): void {
-        controlArmJoint(adcChannel, outputChannel, step, 0, 180, false)
-    }
-
-    /**
-     * Control the robotic arm claws from 90 to 180 degrees.
-     */
-    //% blockId=armClawsControl block="robotic arm claws|controller %adcChannel|output %outputChannel|step %step"
-    //% blockHidden=true
-    //% adcChannel.defl=Adc7828Channel.CH3
-    //% outputChannel.defl=ArmOutputChannel.STC3
-    //% step.min=1 step.max=20 step.defl=1
-    //% subcategory="RobotShield" group="Arm actions"
-    //% weight=85
-    //% help=github:acebott/docs/reference
-    export function clawsControl(
-        adcChannel: Adc7828Channel,
-        outputChannel: ArmOutputChannel,
-        step: number
-    ): void {
-        controlArmJoint(adcChannel, outputChannel, step, 90, 180, false)
-    }
-
 }

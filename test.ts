@@ -16,21 +16,10 @@ function testRoboticArmApi(): void {
 }
 
 function testArmControllerApi(): void {
-    Acebott.adc7828SetAddress(Adc7828I2cAddress.Address0x48)
-    let adc = Acebott.adc7828ReadChannel(Acebott.Adc7828Channel.CH0)
-    Acebott.armSetJoystick(Acebott.ArmJoystickSide.Left, Acebott.Adc7828Channel.CH0, Acebott.Adc7828Channel.CH1, Acebott.Adc7828Channel.CH4)
-    let joystick = Acebott.armReadJoystick(Acebott.ArmJoystickSide.Left, Acebott.ArmJoystickValue.X)
     Acebott.stcServoAngle(0, 90)
     Acebott.i2cAddressRead()
     let address = Acebott.i2cAddressCheck("0x37")
     let stc = Acebott.stcI2cCheck()
-    let adcPresent = Acebott.adc7828I2cCheck(Adc7828I2cAddress.Address0x48)
-    let initialized = Acebott.i2cInitCheck(Adc7828I2cAddress.Address0x48)
-    Acebott.armBaseControl(Acebott.Adc7828Channel.CH0, Acebott.ArmOutputChannel.STC0, 1)
-    Acebott.chassisControl(Acebott.Adc7828Channel.CH0, Acebott.ArmOutputChannel.STC0, 1)
-    Acebott.shoulderControl(Acebott.Adc7828Channel.CH1, Acebott.ArmOutputChannel.STC1, 1)
-    Acebott.elbowControl(Acebott.Adc7828Channel.CH2, Acebott.ArmOutputChannel.STC2, 1)
-    Acebott.clawsControl(Acebott.Adc7828Channel.CH3, Acebott.ArmOutputChannel.STC3, 1)
 }
 
 function testArmAppApi(): void {

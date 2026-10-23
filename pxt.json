@@ -10,7 +10,6 @@
         "README.md",
         "docs/reference.md",
         "docs/testing.md",
-        "AcebottADC7828.ts",
         "AcebottRobotShield.ts",
         "AcebottArmApp.ts",
         "_locales/robotshield-strings.json",

@@ -16,8 +16,8 @@ bluetooth.onBluetoothConnected(function () {
 })
 
 bluetooth.onBluetoothDisconnected(function () {
-    // 同时清除按键、未收完的指令和待执行动作。
-    Acebott.armAppStop()
+    // 通过协议释放按键并停止待执行动作。
+    Acebott.armAppReceive("#1100#1200#1607#")
     basic.showIcon(IconNames.No)
 })
 
@@ -28,7 +28,6 @@ bluetooth.onUartDataReceived(serial.delimiters(Delimiters.Hash), function () {
 
 Acebott.armInitialize(Acebott.ArmOutputChannel.STC0, Acebott.ArmOutputChannel.STC1, Acebott.ArmOutputChannel.STC2, Acebott.ArmOutputChannel.STC3)
 Acebott.armSetSpeed(Acebott.ArmSpeed.Medium)
-Acebott.armAppPrepare()
 bluetooth.startUartService()
 basic.showIcon(IconNames.Heart)
 
@@ -52,6 +51,5 @@ basic.forever(function () {
     } else if (Acebott.armAppIsPressed(Acebott.ArmAppSide.Right, Acebott.ArmAppButton.Right)) {
         Acebott.armSetJoint(Acebott.ArmJoint.Claws, Math.constrain(Acebott.armGetJointAngle(Acebott.ArmJoint.Claws) - 2, 90, 180), 100)
     }
-    Acebott.armAppUpdate()
     basic.pause(20)
 })
