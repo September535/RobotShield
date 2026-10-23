@@ -146,6 +146,7 @@ namespace Acebott {
      * Control a servo through the external STC8H robotic arm controller.
      */
     //% blockId=stcServoAngle block="microbit robotic arm|channel %channel|angle %degree"
+    //% blockHidden=true
     //% channel.min=0 channel.max=5 channel.defl=0
     //% degree.min=0 degree.max=180 degree.defl=90
     //% subcategory="RobotShield" group="Arm actions"
@@ -257,8 +258,6 @@ namespace Acebott {
         ArmOutputChannel.STC3
     ]
     let armJointAngles = [90, 90, 90, 90]
-    // Offset of the active XYZ origin in the original coordinate frame.
-    let armCoordinateOrigin = [0, 0, 0]
     let armLastSpeed = 10
 
     // APP control supplies scheduling while the existing action blocks stay reusable.
@@ -613,38 +612,24 @@ namespace Acebott {
         )
     }
 
-    /** Return all four joints to 90 degrees without changing the XYZ origin. */
+    /** Legacy alias for armReset; keep old programs working with the same XYZ frame. */
     //% blockId=armHomePose block="robotic arm return to home pose"
+    //% blockHidden=true
     //% subcategory="RobotShield" group="Arm actions"
-    //% weight=89
-    //% help=github:acebott/docs/reference
     export function armHomePose(): void {
-        if (armAppHomeHook) {
-            armAppHomeHook()
-        } else {
-            moveArmPose(90, 90, 90, 90, armLastSpeed)
-        }
+        armReset()
     }
 
-    /** Smoothly reset the four joints to 90 degrees and use that pose as XYZ (0,0,0). */
-    //% blockId=armReset block="robotic arm reset"
+    /** Reset all four joint angles to 90 degrees without changing the XYZ frame. */
+    //% blockId=armReset block="robotic arm angle reset"
     //% subcategory="RobotShield" group="Arm actions"
     //% weight=93
     //% help=github:acebott/docs/reference
     export function armReset(): void {
-        let resetSpeed = armLastSpeed
-        moveArmPose(90, 90, 90, 90, resetSpeed)
-        if (armJointAngles[ArmJoint.Chassis] == 90 &&
-            armJointAngles[ArmJoint.Shoulder] == 90 &&
-            armJointAngles[ArmJoint.Elbow] == 90 &&
-            armJointAngles[ArmJoint.Claws] == 90) {
-            armCoordinateOrigin = [
-                armCoordinateValue(ArmCoordinateAxis.X),
-                armCoordinateValue(ArmCoordinateAxis.Y),
-                armCoordinateValue(ArmCoordinateAxis.Z)
-            ]
+        if (armAppHomeHook) {
+            armAppHomeHook()
         } else {
-            serial.writeLine("Arm reset incomplete")
+            moveArmPose(90, 90, 90, 90, armLastSpeed)
         }
     }
 
@@ -946,7 +931,7 @@ namespace Acebott {
         let startE = armGetJointAngle(ArmJoint.Elbow)
         let startG = armGetJointAngle(ArmJoint.Claws)
         let delta = Math.max(Math.max(Math.abs(c - startC), Math.abs(s - startS)), Math.max(Math.abs(e - startE), Math.abs(g - startG)))
-        let steps = Math.ceil(delta)
+        let steps = Math.ceil(delta/2)
         // 保留整条路径预检，避免移动到一半才发现限位。
         for (let step = 1; step <= steps; step++) {
             let pc = Math.round(startC + (c - startC) * step / steps)
@@ -976,7 +961,7 @@ namespace Acebott {
         }
     }
 
-    /** Move using the calibrated IK-v1 model; XYZ is relative after armReset. */
+    /** Move using the calibrated IK-v1 model in the fixed XYZ frame. */
     //% blockId=armSetPosition block="robotic arm coordinate control|X %x|Y %y|Z %z"
     //% x.defl=0
     //% y.defl=0
@@ -1004,10 +989,6 @@ namespace Acebott {
             armXYZInitializeCalibrationOffsets()
             armXYZCalibrationReady = true
         }
-        // Preserve the home-relative coordinate frame requested for armReset.
-        x += armCoordinateOrigin[ArmCoordinateAxis.X]
-        y += armCoordinateOrigin[ArmCoordinateAxis.Y]
-        z += armCoordinateOrigin[ArmCoordinateAxis.Z]
         armXYZTransportStage = "XYZ"
         armXYZTransportRunning = true
         armXYZClaws = armJointAngles[ArmJoint.Claws]
@@ -1063,14 +1044,14 @@ namespace Acebott {
     }
 
 
-    /** Get modeled XYZ in centimeters; armReset makes the home pose the origin. */
+    /** Get modeled XYZ in centimeters in the fixed coordinate frame. */
     //% blockId=armGetCoordinate block="get robotic arm coordinate %axis"
     //% subcategory="RobotShield" group="Arm actions"
     //% weight=80
     //% help=github:acebott/docs/reference
     export function armGetCoordinate(axis: ArmCoordinateAxis): number {
-        // Keep one decimal place (0.1 cm) after subtracting the shared origin.
-        return Math.round((armCoordinateValue(axis) - armCoordinateOrigin[axis]) * 10) / 10
+        // Keep one decimal place (0.1 cm) in the fixed coordinate frame.
+        return Math.round(armCoordinateValue(axis) * 10) / 10
     }
 
     /** Get the current angle of one robotic-arm joint. */

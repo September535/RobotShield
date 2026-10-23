@@ -29,7 +29,7 @@
     "Acebott.stcI2cCheck|block": "检测STC I2C 0x37",
     "Acebott.i2cAddressCheck|block": "检测IIC地址 %address",
     "Acebott.armSetPose|block": "设置机械臂姿态|底盘 %chassis|肩部 %shoulder|手肘 %elbow|夹爪 %claws",
-    "Acebott.armReset|block": "机械臂复位",
+    "Acebott.armReset|block": "机械臂角度复位",
     "Acebott.armSetSpeed|block": "设置机械臂速度 %speed",
     "Acebott.ArmSpeed.Slow|block": "慢",
     "Acebott.ArmSpeed.Medium|block": "中",
@@ -37,10 +37,8 @@
     "Acebott.armClaw|block": "夹爪 %state",
     "Acebott.ArmClawState.Open|block": "张开",
     "Acebott.ArmClawState.Close|block": "闭合",
-    "Acebott.armHomePose|block": "回到初始姿态",
     "Acebott.ArmAppSide.Left|block": "左",
     "Acebott.ArmAppSide.Right|block": "右",
-    "Acebott.armAppSelectGroup|block": "选择机械臂记忆组 %group",
     "Acebott.ArmMemoryMode.StartRecording|block": "开始记录",
     "Acebott.ArmMemoryMode.EndRecording|block": "结束记录",
     "Acebott.ArmMemoryMode.RunLoop|block": "循环回放",
@@ -56,6 +54,8 @@
     "Acebott.ArmAppButton.Down|block": "下",
     "Acebott.ArmAppButton.Left|block": "左",
     "Acebott.ArmAppButton.Right|block": "右",
-    "Acebott.armAppIsPressed|block": "APP %side pad 按键 %button 被按下",
-    "Acebott.armAppReceive|block": "接收并解析 APP 数据 %data"
+    "Acebott.armAppIsPressed|block": "APP %side 摇杆 %button 按钮被按下",
+    "Acebott.armAppReceive|block": "接收并解析 APP 数据 %data",
+    "Acebott.armAppOpenAdvancedControl|block": "开启高级控制",
+    "Acebott.armAppReadResult|block": "发送APP指令校对"
 }
